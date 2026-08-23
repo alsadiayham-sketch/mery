@@ -5,4 +5,4 @@ compatibility_date = "2024-11-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "mery-db"
-database_id = "{{D1_DATABASE_ID}}"
+database_id = "9a40d1e3-c64a-4af2-9cdd-fb19c6adeb77"
