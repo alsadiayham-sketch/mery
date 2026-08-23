@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mery Beauty Store | تم تأكيد الطلب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .confirmation-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 20px; background: linear-gradient(135deg, #f5f3ed, #fafaf8); }
+        .confirmation-card { background: white; border-radius: 24px; padding: 40px; max-width: 650px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.14); text-align: center; animation: confirmSlideIn 0.6s ease; }
+        @keyframes confirmSlideIn { from { opacity: 0; transform: translateY(30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .success-icon { width: 74px; height: 74px; margin: 0 auto 15px; border-radius: 50%; background: var(--primary-lighter); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: 900; }
+        .confirmation-card h1 { font-size: 1.8rem; color: var(--primary-dark); margin-bottom: 5px; }
+        .confirmation-card .order-id { font-size: 0.95rem; color: var(--text-light); margin-bottom: 25px; }
+        .order-id-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; }
+        .order-id-row .order-id { margin-bottom: 0; }
+        .btn-copy-order { padding: 6px 14px; border: 1px solid var(--gold, #b8945a); background: transparent; color: var(--gold-deep, #9c7a44); border-radius: 20px; font-family: 'Tajawal', sans-serif; font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.25s ease; }
+        .btn-copy-order:hover { background: var(--gold, #b8945a); color: #fff; }
+        .btn-copy-order.copied { background: #2e7d32; border-color: #2e7d32; color: #fff; }
+        .order-details { text-align: right; background: var(--bg-alt); border-radius: 16px; padding: 20px; margin: 20px 0; }
+        .order-details h3 { font-size: 1.1rem; color: var(--primary-dark); margin-bottom: 15px; padding-bottom: 10px; border-bottom: 2px solid var(--primary-lighter); }
+        .order-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #e5e7eb; }
+        .order-item:last-child { border-bottom: none; }
+        .order-item-name { font-weight: 500; display: block; }
+        .order-item-qty { color: var(--text-light); font-size: 0.85rem; }
+        .order-item-price { font-weight: 700; color: var(--primary); }
+        .order-item-price.pending { color: var(--primary-dark); }
+        .order-item-meta, .order-item-note { display: block; color: var(--text-light); font-size: 0.82rem; line-height: 1.7; margin-top: 4px; }
+        .order-item-note { color: var(--primary-dark); font-weight: 600; }
+        .order-summary { margin-top: 15px; padding-top: 15px; border-top: 2px solid var(--primary-lighter); }
+        .order-summary-row { display: flex; justify-content: space-between; padding: 5px 0; }
+        .order-summary-row.total { font-size: 1.3rem; font-weight: 900; color: var(--primary-dark); padding-top: 10px; }
+        .order-info { text-align: right; margin-top: 15px; font-size: 0.9rem; color: var(--text-light); }
+        .order-info span { display: block; padding: 3px 0; }
+        .order-info strong { color: var(--text); }
+        .confirmation-actions { margin-top: 25px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+        .confirmation-actions a { padding: 14px 25px; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.95rem; text-decoration: none; transition: all 0.3s ease; }
+        .btn-whatsapp-confirm { background: #25d366; color: white; }
+        .btn-whatsapp-confirm:hover { background: #1da851; transform: translateY(-2px); }
+        .btn-continue { background: var(--primary); color: white; }
+        .btn-continue:hover { background: var(--primary-dark); transform: translateY(-2px); }
+        .confetti { position: fixed; inset: 0; pointer-events: none; z-index: 100; overflow: hidden; }
+        .confetti-piece { position: absolute; width: 10px; height: 10px; border-radius: 50%; animation: confettiFall 3s ease-in forwards; }
+        @keyframes confettiFall { 0% { transform: translateY(-100vh) rotate(0deg); opacity: 1; } 100% { transform: translateY(100vh) rotate(720deg); opacity: 0; } }
+        @media (max-width: 768px) { .confirmation-card { padding: 25px; } .confirmation-card h1 { font-size: 1.4rem; } }
+    </style>
+</head>
+<body>
+    <div class="confetti" id="confetti"></div>
+    <div class="confirmation-page">
+        <div class="confirmation-card">
+            <div class="success-icon">✓</div>
+            <h1>تم تأكيد طلبك بنجاح</h1>
+            <div class="order-id-row">
+                <span class="order-id" id="orderId"></span>
+                <button type="button" class="btn-copy-order" id="copyOrderBtn" onclick="copyOrderId()">نسخ الرقم</button>
+            </div>
+            <div class="order-details">
+                <h3>تفاصيل الطلب</h3>
+                <div id="orderItems"></div>
+                <div class="order-summary">
+                    <div class="order-summary-row"><span>عدد المنتجات:</span><span id="orderCount"></span></div>
+                    <div class="order-summary-row"><span>طريقة الاستلام:</span><span id="orderDelivery"></span></div>
+                    <div class="order-summary-row total"><span>المجموع:</span><span id="orderTotal"></span></div>
+                </div>
+                <div class="order-info" id="orderInfo"></div>
+            </div>
+            <p style="color: var(--text-light); font-size: 0.9rem;">سيتم التواصل معك قريباً لتأكيد الطلب</p>
+            <div class="confirmation-actions">
+                <a href="#" class="btn-whatsapp-confirm" id="whatsappConfirmBtn">إرسال الطلب عبر واتساب</a>
+                <a href="index.html" class="btn-continue">متابعة التسوق</a>
+            </div>
+        </div>
+    </div>
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script>
+        var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
+        var currentOrderId = '';
+
+        function copyOrderId() {
+            if (!currentOrderId) return;
+            var btn = document.getElementById('copyOrderBtn');
+            var done = function () {
+                btn.textContent = 'تم النسخ ✓';
+                btn.classList.add('copied');
+                setTimeout(function () { btn.textContent = 'نسخ الرقم'; btn.classList.remove('copied'); }, 2000);
+            };
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(currentOrderId).then(done).catch(function () { fallbackCopy(currentOrderId); done(); });
+            } else {
+                fallbackCopy(currentOrderId);
+                done();
+            }
+        }
+        function fallbackCopy(text) {
+            var ta = document.createElement('textarea');
+            ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+            document.body.appendChild(ta); ta.focus(); ta.select();
+            try { document.execCommand('copy'); } catch (e) {}
+            document.body.removeChild(ta);
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var order = JSON.parse(localStorage.getItem('mery_last_order'));
+            if (!order) {
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (window.db) {
+                db.collection('settings').doc('config').get().then(function (settingsSnap) {
+                    if (settingsSnap.exists) siteSettings = normalizeSettings(settingsSnap.data());
+                    renderOrder(order);
+                }).catch(function (error) {
+                    console.error(error);
+                    renderOrder(order);
+                });
+            } else {
+                renderOrder(order);
+            }
+        });
+
+        function renderOrder(order) {
+            currentOrderId = order.id;
+            document.getElementById('orderId').textContent = 'رقم الطلب: ' + order.id;
+            document.getElementById('orderItems').innerHTML = (order.items || []).map(function (item) {
+                if (item.type === 'custom_package') {
+                    var meta = '<span class="order-item-qty">علبة مخصصة • لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '</span>';
+                    meta += '<span class="order-item-meta">' + (item.sets || []).map(function (setItem, index) { return 'تشكيلة ' + (index + 1) + ': ' + getPackagingTypeLabel(setItem.chocolateType) + ' / ' + getPackagingFillingLabel(setItem.filling) + ' / الكمية ' + (parseInt(setItem.qty, 10) || 1); }).join('<br>') + '</span>';
+                    meta += '<span class="order-item-meta">' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + ' • ' + escapeHtml(item.customerName || '') + ' • ' + escapeHtml(item.customerPhone || '') + '</span>';
+                    if (item.delivery === 'delivery' && item.customerLocation) meta += '<span class="order-item-meta">الموقع: ' + escapeHtml(item.customerLocation) + '</span>';
+                    if (item.notes) meta += '<span class="order-item-note">ملاحظات: ' + escapeHtml(item.notes) + '</span>';
+                    return '<div class="order-item"><div><span class="order-item-name">' + getCustomPackageTitle(item) + '</span>' + meta + '</div><span class="order-item-price pending">يحدد لاحقاً</span></div>';
+                }
+                return '<div class="order-item"><div><span class="order-item-name">' + item.name + '</span><span class="order-item-qty">' + item.brand + ' • ' + item.sizeLabel + ' • x' + item.qty + '</span></div><span class="order-item-price">' + formatCurrency(item.lineTotal) + '</span></div>';
+            }).join('');
+            var totalItems = (order.items || []).reduce(function (sum, item) { return sum + (parseInt(item.qty, 10) || 1); }, 0);
+            document.getElementById('orderCount').textContent = totalItems + ' قطعة';
+            document.getElementById('orderDelivery').textContent = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل';
+            document.getElementById('orderTotal').textContent = order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending);
+            var info = '<span><strong>الاسم:</strong> ' + order.customerName + '</span>';
+            info += '<span><strong>الهاتف:</strong> ' + order.customerPhone + '</span>';
+            if (order.delivery === 'delivery' && order.address) info += '<span><strong>العنوان:</strong> ' + order.address + '</span>';
+            if (order.notes) info += '<span><strong>ملاحظات:</strong> ' + order.notes + '</span>';
+            info += '<span><strong>التاريخ:</strong> ' + formatDateTime(order.date) + '</span>';
+            document.getElementById('orderInfo').innerHTML = info;
+            document.getElementById('whatsappConfirmBtn').href = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
+            createConfetti();
+        }
+
+        function buildWhatsAppMessage(order) {
+            var itemsText = (order.items || []).map(function (item, index) {
+                if (item.type === 'custom_package') {
+                    return (index + 1) + '. ' + item.name + '\n   لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '\n   السعر: يحدد لاحقاً';
+                }
+                return (index + 1) + '. ' + item.name + ' (' + item.sizeLabel + ')\n   السعر: ' + item.price + ' شيكل × ' + item.qty + ' = ' + item.lineTotal + ' شيكل';
+            }).join('\n');
+            var deliveryText = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل إلى: ' + order.address;
+            var message = 'مرحبا، هذا تأكيد للطلب رقم ' + order.id + ':\n';
+            message += 'ـــــــــــــــــــــــــــ\n';
+            message += itemsText + '\n';
+            message += 'ـــــــــــــــــــــــــــ\n';
+            message += 'الإجمالي: ' + (order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending)) + '\n';
+            message += 'الاستلام: ' + deliveryText + '\n';
+            return message;
+        }
+
+        function createConfetti() {
+            var container = document.getElementById('confetti');
+            var colors = ['#d4af37', '#b8860b', '#f0e6b8', '#1a1a1a', '#6b6b6b', '#c9a96e'];
+            for (var i = 0; i < 50; i += 1) {
+                var piece = document.createElement('div');
+                piece.className = 'confetti-piece';
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.animationDelay = Math.random() * 2 + 's';
+                piece.style.animationDuration = 2 + Math.random() * 2 + 's';
+                piece.style.width = 6 + Math.random() * 8 + 'px';
+                piece.style.height = piece.style.width;
+                container.appendChild(piece);
+            }
+            setTimeout(function () { if (container && container.parentNode) container.parentNode.removeChild(container); }, 5000);
+        }
+    </script>
+</body>
+</html>

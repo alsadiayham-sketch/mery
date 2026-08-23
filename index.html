@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<!-- Deployed via GitHub Actions -->
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mery Beauty Store | ميري بيوتي ستور</title>
+    <meta name="description" content="Mery Beauty Store — beauty picks, offers, and packages from beautiful girl to another.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Baloo+Bhaijaan+2:wght@500;600;700;800&family=Grandstander:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="icon" href="logo.png">
+</head>
+<body>
+    <div class="discount-banner" id="discountBanner" style="display:none;">
+        <div class="banner-scroll">
+            <span id="bannerText"></span>
+        </div>
+    </div>
+
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">
+                <img src="logo.png" alt="Mery Beauty Store" class="logo-img" id="logoImg">
+                <span class="brand-copy">
+                    <span id="logoText" class="logo-text">Mery Beauty Store</span>
+                    <span class="header-tagline" lang="en" dir="ltr">from beautiful girl to another</span>
+                </span>
+            </a>
+            <div class="nav-search">
+                <input type="text" id="navSearchInput" placeholder="ابحثي عن منتج..." autocomplete="off">
+                <div class="search-dropdown" id="navSearchDropdown"></div>
+            </div>
+            <ul class="nav-links">
+                <li><a href="#products">المنتجات</a></li>
+                <li></li>
+                <li><a href="#about">من نحن</a></li>
+                <li><a href="#delivery">التوصيل</a></li>
+                <li><a href="#contact">تواصلي معنا</a></li>
+                <li><a href="#order-tracking">تتبّع الطلب</a></li>
+            </ul>
+            <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
+                🛒
+                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+            </div>
+            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+        </div>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <a href="#products" onclick="toggleMobileMenu()">المنتجات</a>
+        <a href="#about" onclick="toggleMobileMenu()">من نحن</a>
+        <a href="#delivery" onclick="toggleMobileMenu()">التوصيل</a>
+        <a href="#contact" onclick="toggleMobileMenu()">تواصلي معنا</a>
+        <a href="#order-tracking" onclick="toggleMobileMenu()">تتبّع الطلب</a>
+    </div>
+
+    <section class="hero" id="heroSection">
+        <div class="hero-slide active">
+            <img src="hero-bg.png" alt="Mery Beauty Store beauty portrait" fetchpriority="high">
+            <div class="hero-overlay">
+                <div class="hero-content" lang="en" dir="ltr">
+                    <p class="hero-subtitle" id="heroSubtitle">from beautiful girl to another</p>
+                    <a href="#products" class="btn-primary">تسوقي الآن</a>
+                </div>
+            </div>
+        </div>
+        <div class="hero-dots" id="heroDots"></div>
+    </section>
+
+    <section id="products" class="filter-section">
+        <div class="container">
+            <h2 class="section-title">منتجاتنا</h2>
+            <p class="store-notice" id="storeNotice" style="display:none;"></p>
+            <div class="products-search">
+                <input type="text" id="productsSearchInput" placeholder="ابحثي عن منتج، ماركة، أو فئة..." autocomplete="off">
+                <div class="search-dropdown" id="productsSearchDropdown"></div>
+            </div>
+            <div class="filter-toggle-bar" role="group" aria-label="فلترة المنتجات">
+                <button class="filter-btn active" type="button" aria-pressed="true" data-filter="all" onclick="filterProducts('all')">الكل</button>
+                <button class="filter-btn" type="button" aria-pressed="false" data-filter="discounts" onclick="filterProducts('discounts')">الخصومات</button>
+                <button class="filter-btn" type="button" aria-pressed="false" data-filter="packages" onclick="filterProducts('packages')">باكجات</button>
+            </div>
+        </div>
+    </section>
+
+    <section class="products-section">
+        <div class="container products-shell">
+            <div class="store-loading" id="storeLoading">
+                <div class="spinner"></div>
+                <p>جاري تحميل تشكيلتنا الفاخرة...</p>
+            </div>
+            <div class="products-grid" id="productsGrid"></div>
+        </div>
+    </section>
+
+    <section id="about" class="about-section">
+        <div class="container">
+            <h2 class="section-title">💫 من نحن</h2>
+            <div class="about-content">
+                <div class="about-text">
+                    <p id="aboutText">في Mery Beauty Store اخترنا لكِ منتجات الجمال والعناية بلمسة مرحة وناعمة.<br>تسوّقي المكياج، العناية، الباكجات والعروض بسهولة، وكل طلب مجهّز بحب من جميلة إلى جميلة.</p>
+                </div>
+                <div class="about-features">
+                    <div class="feature"><span class="feature-icon">✅</span><span>جودة عالية مضمونة</span></div>
+                    <div class="feature"><span class="feature-icon">🚚</span><span>توصيل سريع</span></div>
+                    <div class="feature"><span class="feature-icon">💰</span><span>أسعار منافسة</span></div>
+                    <div class="feature"><span class="feature-icon">📦</span><span>تغليف مميز</span></div>
+                    <div class="feature"><span class="feature-icon">💜</span><span>خدمة عملاء مميزة</span></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="brands-section">
+        <div class="container">
+            <h2 class="section-title">ماركاتنا</h2>
+            <div class="brands-grid" id="brandsGrid"></div>
+        </div>
+    </section>
+
+    <section id="delivery" class="delivery-section">
+        <div class="container">
+            <h2 class="section-title">🚚 مناطق التوصيل</h2>
+            <div class="delivery-grid">
+                <div class="delivery-card"><span class="delivery-icon">🚗</span><h3>الضفة</h3><p>₪20 لجميع المدن والبلدات</p></div>
+                <div class="delivery-card"><span class="delivery-icon">🏙️</span><h3>القدس</h3><p>₪30 مع خدمة توصيل سريعة</p></div>
+                <div class="delivery-card"><span class="delivery-icon">📦</span><h3>الداخل</h3><p>₪50 تغليف وتوصيل آمن</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="contact" class="contact-section">
+        <div class="container">
+            <h2 class="section-title">📱 تواصلي معنا</h2>
+            <p class="section-subtitle">للطلب أو الاستفسار 💬</p>
+            <div class="social-links">
+                <a href="https://wa.me/972569236758" class="social-btn whatsapp" target="_blank" id="whatsappLink"><span>📱 WhatsApp</span></a>
+            </div>
+        </div>
+    </section>
+
+
+    <section id="order-tracking" class="order-tracking-section">
+        <div class="container">
+            <h2 class="section-title">🔎 تتبّع الطلب</h2>
+            <p class="section-subtitle">أدخلي رقم الطلب لعرض حالته الحالية وتفاصيله</p>
+            <div class="order-tracking-card">
+                <div class="order-tracking-form">
+                    <input type="text" id="orderTrackingInput" placeholder="مثال: ORD-123456" autocomplete="off">
+                    <button type="button" class="btn-primary" id="orderTrackingBtn" onclick="trackOrder()">بحث</button>
+                </div>
+                <div id="orderTrackingResult" class="order-tracking-result"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
+        <div class="pdp-modal" onclick="event.stopPropagation()">
+            <button class="pdp-close" onclick="closePDP()">✕</button>
+            <div class="pdp-content">
+                <div class="pdp-image" id="pdpImage"></div>
+                <div class="pdp-info">
+                    <span class="product-brand" id="pdpBrand"></span>
+                    <h2 id="pdpName"></h2>
+                    <div class="pdp-meta" id="pdpMeta"></div>
+                    <div class="pdp-size-section" id="pdpSizeSection" style="display:none;">
+                        <label>الحجم:</label>
+                        <div class="pdp-size-options" id="pdpSizes"></div>
+                    </div>
+                    <div class="pdp-price" id="pdpPrice"></div>
+                    <div class="pdp-qty">
+                        <label>الكمية:</label>
+                        <div class="qty-selector">
+                            <button onclick="changePDPQty(-1)">−</button>
+                            <span id="pdpQty">1</span>
+                            <button onclick="changePDPQty(1)">+</button>
+                        </div>
+                    </div>
+                    <button class="btn-add-cart pdp-add-btn" id="pdpAddBtn" onclick="addFromPDP()">أضيفي للسلة</button>
+                </div>
+            </div>
+            <div class="pdp-related" id="pdpRelated" style="display:none;">
+                <h3>منتجات مشابهة</h3>
+                <div class="pdp-related-grid" id="pdpRelatedGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3>سلة التسوق</h3>
+            <button class="cart-close" onclick="toggleCart()">✕</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty"><span>•</span><p>السلة فارغة</p></div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display:none;">
+            <div class="cart-total"><span>المجموع:</span><span id="cartTotal">₪0</span></div>
+            <a href="checkout.html" class="btn-checkout" id="checkoutBtn">إتمام الطلب</a>
+            <button class="btn-clear-cart" onclick="clearCart()">تفريغ السلة</button>
+        </div>
+    </div>
+
+    <div id="flyingProduct" class="flying-product" style="display:none;"></div>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2026 ميري بيوتي ستور. جميع الحقوق محفوظة</p>
+        </div>
+    </footer>
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

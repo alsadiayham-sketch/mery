@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mery Beauty Store | إتمام الطلب</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .checkout-page { min-height: 100vh; padding: 100px 20px 60px; background: var(--bg); }
+        .checkout-container { max-width: 900px; margin: 0 auto; }
+        .checkout-title { text-align: center; font-size: 2rem; font-weight: 900; color: var(--primary-dark); margin-bottom: 30px; }
+        .checkout-grid { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 25px; }
+        .checkout-card { background: white; border-radius: var(--radius); padding: 25px; box-shadow: var(--shadow); }
+        .checkout-card h3 { font-size: 1.2rem; color: var(--primary-dark); margin-bottom: 20px; padding-bottom: 10px; border-bottom: 2px solid var(--primary-lighter); }
+        .checkout-item { display: flex; gap: 12px; padding: 12px; background: var(--bg-alt); border-radius: 12px; margin-bottom: 10px; align-items: center; }
+        .checkout-item img { width: 60px; height: 60px; object-fit: contain; border-radius: 8px; background: white; padding: 4px; }
+        .checkout-item.custom-package-checkout { align-items: flex-start; }
+        .checkout-item-media { width: 60px; height: 60px; border-radius: 14px; background: var(--primary-lighter); color: var(--primary-dark); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; }
+        .custom-package-badge { display: inline-block; margin-top: 4px; font-size: 0.85rem; color: var(--primary-dark); font-weight: 700; }
+        .checkout-item-note, .checkout-item-meta-block { display: block; color: var(--text-light); font-size: 0.85rem; line-height: 1.7; margin-top: 6px; }
+        .checkout-item-price.pending { color: var(--primary-dark); font-size: 0.95rem; }
+        .checkout-success-card { background: white; border-radius: var(--radius); padding: 28px; box-shadow: var(--shadow); text-align: center; }
+        .checkout-success-card h3 { margin-bottom: 10px; color: var(--primary-dark); font-size: 1.4rem; }
+        .checkout-success-card p { color: var(--text-light); margin-bottom: 18px; line-height: 1.9; }
+        .checkout-success-order-id { display: inline-flex; padding: 10px 16px; border-radius: 999px; background: var(--primary-lighter); color: var(--primary-dark); font-weight: 800; margin-bottom: 18px; }
+        .checkout-success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .checkout-success-actions a, .checkout-success-actions button { min-width: 190px; padding: 14px 18px; border-radius: 12px; border: none; font-family: 'Tajawal', sans-serif; font-weight: 700; font-size: 0.96rem; cursor: pointer; text-decoration: none; transition: var(--transition); }
+        .checkout-success-actions .btn-success-whatsapp { background: #25d366; color: white; }
+        .checkout-success-actions .btn-success-whatsapp:hover { background: #1da851; }
+        .checkout-success-actions .btn-success-back { background: var(--primary); color: white; }
+        .checkout-success-actions .btn-success-back:hover { background: var(--primary-dark); }
+        .checkout-item-info { flex: 1; }
+        .checkout-item-info h4 { font-size: 0.95rem; margin-bottom: 3px; }
+        .checkout-item-info .item-brand, .checkout-item-info .item-size { display: block; font-size: 0.8rem; color: var(--text-light); }
+        .checkout-item-qty { display: flex; align-items: center; gap: 0; border: 2px solid var(--primary-light); border-radius: 20px; overflow: hidden; }
+        .checkout-item-qty button { width: 28px; height: 28px; border: none; background: var(--primary-lighter); color: var(--primary); font-weight: 700; cursor: pointer; font-size: 1rem; transition: var(--transition); }
+        .checkout-item-qty button:hover { background: var(--primary); color: white; }
+        .checkout-item-qty span { min-width: 28px; text-align: center; font-weight: 700; font-size: 0.9rem; }
+        .checkout-item-price { font-weight: 700; color: var(--primary); min-width: 60px; text-align: center; }
+        .checkout-item-remove { background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; opacity: 0.6; transition: var(--transition); }
+        .checkout-item-remove:hover { opacity: 1; }
+        .summary-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f3f4f6; font-size: 0.95rem; }
+        .summary-row.total { border-bottom: none; padding-top: 15px; font-size: 1.3rem; font-weight: 900; color: var(--primary-dark); }
+        .summary-row .label { color: var(--text-light); }
+        .delivery-options { display: flex; flex-direction: column; gap: 10px; margin: 15px 0; }
+        .delivery-option { display: flex; align-items: center; gap: 12px; padding: 15px; border: 2px solid var(--primary-light); border-radius: 12px; cursor: pointer; transition: var(--transition); }
+        .delivery-option:hover { border-color: var(--primary); background: var(--primary-lighter); }
+        .delivery-option.selected { border-color: var(--primary); background: var(--primary-lighter); }
+        .delivery-option .radio-dot { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--primary-light); display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .delivery-option.selected .radio-dot { border-color: var(--primary); }
+        .delivery-option.selected .radio-dot::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); }
+        .delivery-option-info h4 { font-size: 0.95rem; }
+        .delivery-option-info p { font-size: 0.8rem; color: var(--text-light); margin-top: 2px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-weight: 600; margin-bottom: 5px; font-size: 0.9rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-family: 'Tajawal', sans-serif; font-size: 0.95rem; transition: var(--transition); }
+        .form-group input:focus, .form-group textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(212,175,55,0.18); }
+        .btn-whatsapp-order { width: 100%; padding: 14px; background: #25d366; color: white; border: none; border-radius: 12px; font-family: 'Tajawal', sans-serif; font-size: 1rem; font-weight: 700; cursor: pointer; transition: var(--transition); margin-top: 10px; text-decoration: none; display: block; text-align: center; }
+        .btn-whatsapp-order:hover { background: #1da851; }
+        .btn-whatsapp-order:disabled { opacity: 0.6; cursor: wait; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: var(--primary); text-decoration: none; font-weight: 600; }
+        .back-link:hover { text-decoration: underline; }
+        .empty-checkout { text-align: center; padding: 60px; background: white; border-radius: var(--radius); box-shadow: var(--shadow); }
+        .empty-checkout span { font-size: 3rem; display: block; margin-bottom: 15px; color: var(--primary); }
+        .empty-checkout p { color: var(--text-light); margin-bottom: 20px; }
+        .empty-checkout a { display: inline-block; padding: 12px 30px; background: var(--primary); color: white; text-decoration: none; border-radius: 25px; font-weight: 700; }
+        .region-options { display: flex; gap: 10px; flex-wrap: wrap; }
+        .region-option { flex: 1; min-width: 80px; padding: 12px 16px; border: 2px solid var(--primary-light); border-radius: 12px; cursor: pointer; text-align: center; transition: var(--transition); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+        .region-option:hover { border-color: var(--primary); background: var(--primary-lighter); }
+        .region-option.selected { border-color: var(--primary); background: var(--primary-lighter); }
+        .region-option span:first-child { font-weight: 700; font-size: 0.95rem; }
+        .region-cost { font-size: 0.85rem; color: var(--primary); font-weight: 600; }
+        .checkout-status { text-align: center; margin-bottom: 18px; color: var(--text-light); font-weight: 600; }
+        .checkout-status.error { color: #b91c1c; }
+        @media (max-width: 768px) { .checkout-grid { grid-template-columns: 1fr; } .checkout-page { padding: 80px 15px 40px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container nav-container" style="justify-content: space-between;">
+            <a href="index.html" class="logo"><img src="logo.png" alt="Mery Beauty Store" class="logo-img"><span class="logo-text" style="font-size:1rem;">Mery Beauty Store</span></a>
+            <a href="index.html" style="color: var(--primary-dark); text-decoration: none; font-weight: 600; font-size: 0.95rem; white-space: nowrap; padding: 8px 20px; margin-left: 10px;">← الرئيسية</a>
+        </div>
+    </nav>
+
+    <div class="checkout-page">
+        <div class="checkout-container">
+            <a href="index.html" class="back-link">→ العودة للتسوق</a>
+            <h1 class="checkout-title">إتمام الطلب</h1>
+            <p class="checkout-status" id="checkoutStatus">جاري تحميل بيانات الطلب...</p>
+            <div id="checkoutContent"></div>
+        </div>
+    </div>
+
+    <script src="firebase-config.js"></script>
+    <script src="data.js"></script>
+    <script>
+        var FALLBACK_IMAGE = "data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Crect width=%22100%22 height=%22100%22 rx=%2216%22 fill=%22%23fdf8e8%22/%3E%3Ctext x=%2250%22 y=%2257%22 text-anchor=%22middle%22 font-size=%2218%22 fill=%22%23d4af37%22%3EIMG%3C/text%3E%3C/svg%3E";
+        var products = normalizeProducts(DEFAULT_PRODUCTS);
+        var discounts = normalizeDiscounts(DEFAULT_DISCOUNTS);
+        var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
+        var cart = normalizeCartItems(JSON.parse(localStorage.getItem('mery_cart') || '[]'), products);
+        var selectedDelivery = localStorage.getItem('mery_delivery_method') || 'delivery';
+        var selectedRegion = '';
+        var orderJustPlaced = false;
+
+        var DELIVERY_COSTS = { westbank: 20, jerusalem: 30, inside: 50 };
+        var DELIVERY_LABELS = { westbank: 'الضفة', jerusalem: 'القدس', inside: 'الداخل' };
+
+        document.addEventListener('DOMContentLoaded', initializeCheckout);
+
+        function goToConfirmationIfDone() {
+            if (!orderJustPlaced) return;
+            var lastOrder = localStorage.getItem('mery_last_order');
+            var cartRaw = localStorage.getItem('mery_cart') || '[]';
+            var cartEmpty = cartRaw === '[]' || (JSON.parse(cartRaw) || []).length === 0;
+            if (lastOrder && cartEmpty) window.location.href = 'confirmation.html';
+        }
+        document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'visible') goToConfirmationIfDone(); });
+        window.addEventListener('pageshow', function (e) { if (e.persisted) goToConfirmationIfDone(); });
+
+        function initializeCheckout() {
+            cart = normalizeCartItems(JSON.parse(localStorage.getItem('mery_cart') || '[]'), products);
+            saveCart();
+            render();
+            setStatus('');
+
+            if (window.db) {
+                db.collection('products').onSnapshot(function (snap) {
+                    if (!snap.empty) {
+                        products = snap.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d); });
+                    }
+                    cart = normalizeCartItems(JSON.parse(localStorage.getItem('mery_cart') || '[]'), products);
+                    saveCart();
+                    render();
+                });
+                db.collection('discounts').onSnapshot(function (snap) {
+                    discounts = snap.docs.map(function (docSnap) { return normalizeDiscount(docSnap.data()); });
+                    render();
+                });
+                db.collection('settings').doc('config').onSnapshot(function (docSnap) {
+                    siteSettings = normalizeSettings(docSnap.exists ? docSnap.data() : DEFAULT_SITE_SETTINGS);
+                });
+            }
+        }
+
+        function setStatus(message, type) {
+            var status = document.getElementById('checkoutStatus');
+            if (!status) return;
+            status.textContent = message;
+            status.className = 'checkout-status' + (type ? ' ' + type : '');
+            status.style.display = message ? 'block' : 'none';
+        }
+
+        function getCheckoutItemsCount() {
+            return cart.reduce(function (sum, item) {
+                return sum + Math.max(1, parseInt(item.qty, 10) || 1);
+            }, 0);
+        }
+
+        function renderCustomCheckoutItem(item) {
+            var details = getCustomPackageSetsHtml(item.sets);
+            var meta = '<span class="checkout-item-meta-block">لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '</span>';
+            meta += '<span class="checkout-item-meta-block">طريقة الاستلام: ' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + '</span>';
+            meta += '<span class="checkout-item-meta-block">الاسم: ' + escapeHtml(item.customerName) + ' • الهاتف: ' + escapeHtml(item.customerPhone) + '</span>';
+            if (item.delivery === 'delivery' && item.customerLocation) meta += '<span class="checkout-item-meta-block">الموقع: ' + escapeHtml(item.customerLocation) + '</span>';
+            if (item.notes) meta += '<span class="checkout-item-note">ملاحظات: ' + escapeHtml(item.notes) + '</span>';
+            return '<div class="checkout-item custom-package-checkout"><div class="checkout-item-media">🎁</div><div class="checkout-item-info"><h4>' + getCustomPackageTitle(item) + '</h4><span class="custom-package-badge">سعر يحدد بعد المراجعة</span><div class="custom-package-sets">' + details + '</div>' + meta + '</div><div class="checkout-item-price pending">يحدد لاحقاً</div><button class="checkout-item-remove" onclick="removeItem(\'' + item.id + '\', -1)">✕</button></div>';
+        }
+
+        function render() {
+            var container = document.getElementById('checkoutContent');
+            if (cart.length === 0) {
+                container.innerHTML = '<div class="empty-checkout"><span>•</span><p>السلة فارغة! أضيفي منتجات أولاً</p><a href="index.html">تسوقي الآن</a></div>';
+                return;
+            }
+
+            var itemsHTML = cart.map(function (item) {
+                if (item.type === 'custom_package') return renderCustomCheckoutItem(item);
+                var product = products.find(function (entry) { return entry.id === item.id; });
+                if (!product) {
+                    if (!item.name && !item.image && !item.price) return '';
+                    var fbTotal = (Number(item.price) || 0) * item.qty;
+                    return '<div class="checkout-item"><img src="' + (item.image || FALLBACK_IMAGE) + '" alt="' + escapeHtml(item.name || '') + '"><div class="checkout-item-info"><h4>' + escapeHtml(item.name || 'منتج') + '</h4><span class="item-brand">' + escapeHtml(item.brand || '') + '</span></div><div class="checkout-item-qty"><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)">+</button></div><div class="checkout-item-price">' + formatCurrency(fbTotal) + '</div><button class="checkout-item-remove" onclick="removeItem(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button></div>';
+                }
+                var sizeData = getSizeData(product, item.sizeIdx);
+                var pricing = getFinalPrice(product, item.sizeIdx, discounts);
+                var lineTotal = pricing.final * item.qty;
+                return '<div class="checkout-item"><img src="' + product.image + '" alt="' + product.name + '"><div class="checkout-item-info"><h4>' + product.name + '</h4><span class="item-brand">' + product.brand + '</span><span class="item-size">' + getSizeLabel(sizeData) + '</span></div><div class="checkout-item-qty"><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button onclick="changeQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)">+</button></div><div class="checkout-item-price">' + formatCurrency(lineTotal) + '</div><button class="checkout-item-remove" onclick="removeItem(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button></div>';
+            }).join('');
+
+            var subtotal = getSubtotal();
+            var itemCount = getCheckoutItemsCount();
+            var hasPending = hasCustomPricingPending(cart);
+            var formData = getFormValues();
+            var html = '';
+            html += '<div class="checkout-grid">';
+            html += '<div>';
+            html += '<div class="checkout-card">';
+            html += '<h3>المنتجات (' + itemCount + ' قطعة)</h3>';
+            html += itemsHTML;
+            html += '</div>';
+            html += '<div class="checkout-card" style="margin-top:20px;">';
+            html += '<h3>طريقة الاستلام</h3>';
+            html += '<div class="delivery-options">';
+            html += '<div class="delivery-option ' + (selectedDelivery === 'pickup' ? 'selected' : '') + '" onclick="selectDelivery(\'pickup\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>استلام ذاتي (مجاني)</h4><p>استلمي طلبك بنفسك بدون تكلفة إضافية</p></div></div>';
+            html += '<div class="delivery-option ' + (selectedDelivery === 'delivery' ? 'selected' : '') + '" onclick="selectDelivery(\'delivery\')"><div class="radio-dot"></div><div class="delivery-option-info"><h4>توصيل للعنوان</h4><p>توصيل لجميع مناطق الضفة، القدس، والداخل</p></div></div>';
+            html += '</div>';
+            if (selectedDelivery === 'delivery') {
+                html += '<div class="delivery-regions" style="margin-top:15px;">';
+                html += '<h4 style="margin-bottom:10px; font-size:0.95rem;">اختاري المنطقة:</h4>';
+                html += '<div class="region-options">';
+                html += '<div class="region-option ' + (selectedRegion === 'westbank' ? 'selected' : '') + '" onclick="selectRegion(\'westbank\')"><span>الضفة</span><span class="region-cost">₪20</span></div>';
+                html += '<div class="region-option ' + (selectedRegion === 'jerusalem' ? 'selected' : '') + '" onclick="selectRegion(\'jerusalem\')"><span>القدس</span><span class="region-cost">₪30</span></div>';
+                html += '<div class="region-option ' + (selectedRegion === 'inside' ? 'selected' : '') + '" onclick="selectRegion(\'inside\')"><span>الداخل</span><span class="region-cost">₪50</span></div>';
+                html += '</div></div>';
+            }
+            html += '</div>';
+            html += '<div class="checkout-card" style="margin-top:20px;">';
+            html += '<h3>معلومات التواصل</h3>';
+            html += '<div class="form-group"><label>الاسم</label><input type="text" id="custName" placeholder="اسمك الكريم" required></div>';
+            html += '<div class="form-group"><label>رقم الهاتف</label><input type="tel" id="custPhone" placeholder="05xxxxxxxx" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>';
+            html += '<div class="form-group" id="addressGroup" style="' + (selectedDelivery === 'pickup' ? 'display:none' : '') + '"><label>العنوان (المدينة + تفاصيل)</label><textarea id="custAddress" rows="2" placeholder="المدينة، الحي، الشارع..."></textarea></div>';
+            html += '<div class="form-group"><label>ملاحظات إضافية (اختياري)</label><textarea id="custNotes" rows="2" placeholder="أي ملاحظات على الطلب..."></textarea></div>';
+            html += '</div>';
+            html += '</div>';
+            html += '<div><div class="checkout-card" style="position:sticky; top:80px;">';
+            html += '<h3>ملخص الطلب</h3>';
+            html += '<div class="summary-row"><span class="label">عدد المنتجات:</span><span>' + itemCount + ' قطعة</span></div>';
+            html += '<div class="summary-row"><span class="label">المجموع الفرعي:</span><span>' + getTotalDisplayText(subtotal, hasPending) + '</span></div>';
+            html += '<div class="summary-row"><span class="label">التوصيل:</span><span>' + getDeliveryCostLabel() + '</span></div>';
+            html += '<div class="summary-row total"><span>المجموع:</span><span>' + getTotalDisplayText(getTotal(), hasPending) + '</span></div>';
+            html += '<button type="button" class="btn-whatsapp-order" id="confirmOrderBtn" onclick="confirmOrder()">حفظ الطلب</button>';
+            html += '</div></div></div></div>';
+            container.innerHTML = html;
+            restoreFormValues(formData);
+        }
+
+        function getSubtotal() {
+            return cart.reduce(function (sum, item) {
+                if (item.type === 'custom_package') return sum;
+                var product = products.find(function (entry) { return entry.id === item.id; });
+                return product ? sum + getFinalPrice(product, item.sizeIdx, discounts).final * item.qty : sum + (Number(item.price) || 0) * item.qty;
+            }, 0);
+        }
+
+        function changeQty(productId, sizeIdx, delta) {
+            var item = cart.find(function (entry) { return entry.id === productId && entry.sizeIdx === sizeIdx; });
+            if (!item || item.type === 'custom_package') return;
+            item.qty += delta;
+            if (item.qty < 1) return removeItem(productId, sizeIdx);
+            saveCart();
+            render();
+        }
+
+        function removeItem(productId, sizeIdx) {
+            cart = cart.filter(function (entry) {
+                if (entry.type === 'custom_package') return entry.id !== String(productId);
+                return !(entry.id === productId && entry.sizeIdx === sizeIdx);
+            });
+            saveCart();
+            render();
+        }
+
+        function saveCart() {
+            localStorage.setItem('mery_cart', JSON.stringify(normalizeCartItems(cart, products)));
+        }
+
+        function selectDelivery(method) {
+            var formData = getFormValues();
+            selectedDelivery = method;
+            if (method === 'pickup') selectedRegion = '';
+            localStorage.setItem('mery_delivery_method', method);
+            render();
+            restoreFormValues(formData);
+        }
+
+        function selectRegion(region) {
+            var formData = getFormValues();
+            selectedRegion = region;
+            render();
+            restoreFormValues(formData);
+        }
+
+        function getFormValues() {
+            return {
+                name: (document.getElementById('custName') || {}).value || '',
+                phone: (document.getElementById('custPhone') || {}).value || '',
+                address: (document.getElementById('custAddress') || {}).value || '',
+                notes: (document.getElementById('custNotes') || {}).value || ''
+            };
+        }
+
+        function restoreFormValues(data) {
+            var name = document.getElementById('custName');
+            var phone = document.getElementById('custPhone');
+            var address = document.getElementById('custAddress');
+            var notes = document.getElementById('custNotes');
+            if (name) name.value = data.name || '';
+            if (phone) phone.value = data.phone || '';
+            if (address) address.value = data.address || '';
+            if (notes) notes.value = data.notes || '';
+        }
+
+        function getDeliveryCost() {
+            return selectedDelivery === 'pickup' ? 0 : (DELIVERY_COSTS[selectedRegion] || 0);
+        }
+
+        function getDeliveryCostLabel() {
+            if (selectedDelivery === 'pickup') return 'مجاني (استلام ذاتي)';
+            if (!selectedRegion) return 'اختاري المنطقة';
+            return formatCurrency(getDeliveryCost()) + ' (' + DELIVERY_LABELS[selectedRegion] + ')';
+        }
+
+        function getTotal() {
+            return getSubtotal() + getDeliveryCost();
+        }
+
+        function buildOrder() {
+            var customerName = document.getElementById('custName').value.trim();
+            var customerPhone = document.getElementById('custPhone').value.trim();
+            var address = document.getElementById('custAddress') ? document.getElementById('custAddress').value.trim() : '';
+            var notes = document.getElementById('custNotes').value.trim();
+            var subtotal = getSubtotal();
+            var deliveryCost = getDeliveryCost();
+            var total = subtotal + deliveryCost;
+            var pricingPending = hasCustomPricingPending(cart);
+            var id = makeOrderId();
+            return {
+                id: id,
+                items: cart.map(function (item) {
+                    if (item.type === 'custom_package') {
+                        return {
+                            type: 'custom_package',
+                            packageId: item.id,
+                            name: getCustomPackageTitle(item),
+                            qty: 1,
+                            wrapperColor: item.wrapperColor,
+                            notes: item.notes,
+                            delivery: item.delivery,
+                            customerName: item.customerName,
+                            customerPhone: item.customerPhone,
+                            customerLocation: item.customerLocation,
+                            sets: item.sets,
+                            pricePending: true,
+                            lineTotal: null
+                        };
+                    }
+                    var product = products.find(function (entry) { return entry.id === item.id; });
+                    if (!product) {
+                        return {
+                            productId: item.id,
+                            name: item.name || 'المنتج غير متوفر',
+                            brand: item.brand || '',
+                            image: item.image || '',
+                            sizeIdx: item.sizeIdx,
+                            sizeLabel: '',
+                            qty: item.qty,
+                            price: item.price || 0,
+                            lineTotal: (item.price || 0) * item.qty
+                        };
+                    }
+                    var sizeData = getSizeData(product, item.sizeIdx);
+                    var pricing = getFinalPrice(product, item.sizeIdx, discounts);
+                    return {
+                        productId: product.id,
+                        name: product.name,
+                        brand: product.brand,
+                        image: product.image || item.image || '',
+                        sizeIdx: item.sizeIdx,
+                        sizeLabel: getSizeLabel(sizeData),
+                        qty: item.qty,
+                        price: pricing.final,
+                        lineTotal: pricing.final * item.qty
+                    };
+                }),
+                customerName: customerName,
+                customerPhone: customerPhone,
+                address: address,
+                notes: notes,
+                delivery: selectedDelivery,
+                region: selectedDelivery === 'delivery' ? selectedRegion : 'pickup',
+                deliveryCost: deliveryCost,
+                subtotal: subtotal,
+                total: total,
+                totalDisplay: getTotalDisplayText(total, pricingPending),
+                pricingPending: pricingPending,
+                date: new Date().toISOString(),
+                status: 'new'
+            };
+        }
+
+        function buildWhatsAppMessage(order) {
+            var itemsText = (order.items || []).map(function (item, index) {
+                if (item.type === 'custom_package') {
+                    var packageLines = (item.sets || []).map(function (setItem, setIndex) {
+                        return '   - تشكيلة ' + (setIndex + 1) + ': ' + getPackagingTypeLabel(setItem.chocolateType) + ' / ' + getPackagingFillingLabel(setItem.filling) + ' / الكمية ' + (parseInt(setItem.qty, 10) || 1);
+                    }).join('\n');
+                    var locationLine = item.delivery === 'delivery' && item.customerLocation ? '\n   الموقع: ' + item.customerLocation : '';
+                    var noteLine = item.notes ? '\n   ملاحظات: ' + item.notes : '';
+                    return (index + 1) + '. ' + item.name + '\n   لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '\n' + packageLines + '\n   الاستلام: ' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + '\n   الاسم: ' + item.customerName + ' • الهاتف: ' + item.customerPhone + locationLine + noteLine + '\n   السعر: يحدد لاحقاً';
+                }
+                return (index + 1) + '. ' + item.name + ' (' + item.sizeLabel + ')\n   السعر: ' + item.price + ' شيكل × ' + item.qty + ' = ' + item.lineTotal + ' شيكل';
+            }).join('\n');
+            var shippingText = order.delivery === 'pickup' ? 'مجاني (استلام ذاتي)' : formatCurrency(order.deliveryCost) + ' (' + DELIVERY_LABELS[order.region] + ')';
+            var deliveryLabel = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل إلى ' + DELIVERY_LABELS[order.region] + ': ' + order.address;
+            var msg = 'مرحبا، طلب جديد (' + order.id + '):\n';
+            msg += 'ـــــــــــــــــــــــــــ\n';
+            msg += 'الاسم: ' + order.customerName + '\n';
+            msg += 'الهاتف: ' + order.customerPhone + '\n';
+            msg += 'ـــــــــــــــــــــــــــ\n';
+            msg += 'المنتجات:\n\n' + itemsText + '\n';
+            msg += 'ـــــــــــــــــــــــــــ\n';
+            msg += 'المجموع المعروف: ' + formatCurrency(order.total) + '\n';
+            msg += 'الشحن: ' + shippingText + '\n';
+            msg += 'الإجمالي النهائي: ' + (order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending)) + '\n';
+            msg += 'ـــــــــــــــــــــــــــ\n';
+            msg += 'الاستلام: ' + deliveryLabel + '\n';
+            if (order.notes) msg += 'ملاحظات: ' + order.notes + '\n';
+            return msg;
+        }
+
+        function showOrderSuccess(order) {
+            var container = document.getElementById('checkoutContent');
+            var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
+            var html = '';
+            html += '<div class="checkout-success-card">';
+            html += '<h3>تم حفظ طلبك بنجاح</h3>';
+            html += '<div class="checkout-success-order-id">رقم الطلب: ' + order.id + '</div>';
+            html += '<p>يمكنك الآن إرسال الطلب عبر واتساب بشكل اختياري، أو العودة مباشرة إلى صفحة التأكيد والمتجر.</p>';
+            html += '<div class="checkout-success-actions">';
+            html += '<a href="' + whatsappUrl + '" target="_blank" rel="noopener" class="btn-success-whatsapp">إرسال عبر واتساب</a>';
+            html += '<button type="button" class="btn-success-back" onclick="window.location.href=\'confirmation.html\'">تم، عودة للمتجر</button>';
+            html += '</div></div>';
+            container.innerHTML = html;
+            setStatus('تم حفظ الطلب بنجاح. رقم الطلب: ' + order.id, 'success');
+        }
+
+        function confirmOrder() {
+            var customerName = document.getElementById('custName').value.trim();
+            var customerPhone = document.getElementById('custPhone').value.trim();
+            if (!customerName || !customerPhone) return alert('الرجاء إدخال الاسم ورقم الهاتف');
+            if (customerPhone.length < 9 || customerPhone.length > 14) return alert('رقم الهاتف غير صحيح');
+            if (selectedDelivery === 'delivery') {
+                if (!selectedRegion) return alert('الرجاء اختيار المنطقة');
+                var address = document.getElementById('custAddress').value.trim();
+                if (!address) return alert('الرجاء إدخال عنوان التوصيل');
+            }
+
+            var button = document.getElementById('confirmOrderBtn');
+            var originalText = button.textContent;
+            button.disabled = true;
+            button.textContent = 'جاري حفظ الطلب...';
+            setStatus('جاري حفظ الطلب...', '');
+
+            var order = buildOrder();
+            if (!window.db) {
+                alert('تعذر الاتصال بقاعدة البيانات حالياً، حاولي مرة أخرى.');
+                button.disabled = false;
+                button.textContent = originalText;
+                setStatus('');
+                return;
+            }
+
+            db.collection('orders').doc(order.id).set(order).then(function () {
+                localStorage.setItem('mery_last_order', JSON.stringify(order));
+                localStorage.setItem('mery_cart', '[]');
+                cart = [];
+                orderJustPlaced = true;
+                var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
+                setStatus('تم حفظ الطلب. جاري تحويلك إلى واتساب لإرسال الطلب...', 'success');
+                window.location.href = whatsappUrl;
+            }).catch(function (error) {
+                console.error(error);
+                alert('تعذر حفظ الطلب حالياً، حاولي مرة أخرى.');
+                button.disabled = false;
+                button.textContent = originalText;
+                setStatus('');
+            });
+        }
+    </script>
+</body>
+</html>
