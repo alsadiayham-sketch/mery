@@ -653,20 +653,29 @@ function renderOrdersTable() {
     tbody.innerHTML = filteredOrders.map(function (order) {
         var itemsCount = (order.items || []).reduce(function (sum, item) { return sum + (Number(item.qty) || 0); }, 0);
         var deliveryText = order.delivery === 'pickup' ? 'استلام' : (order.region ? DELIVERY_REGION_LABEL(order.region) : 'توصيل');
-        return '<tr class="order-main-row" onclick="toggleOrderDetails(\'' + order.id + '\')"><td>' + order.id + '</td><td>' + formatDateTime(order.date) + '</td><td>' + (order.customerName || '-') + '</td><td>' + (order.customerPhone || '-') + '</td><td>' + itemsCount + '</td><td>' + formatCurrency(order.total) + '</td><td>' + deliveryText + '</td><td><select class="order-status-select" onclick="event.stopPropagation()" onchange="updateOrderStatus(\'' + order.id + '\', this.value)">' + ['new', 'processing', 'completed', 'cancelled'].map(function (status) { return '<option value="' + status + '" ' + (order.status === status ? 'selected' : '') + '>' + ORDER_STATUS_LABEL(status) + '</option>'; }).join('') + '</select></td></tr><tr class="order-details-row" id="details-' + order.id + '" style="display:none;"><td colspan="8">' + renderOrderDetails(order) + '</td></tr>';
+        var safeId = escapeHtml(order.id || '');
+        return '<tr class="order-main-row" data-order-id="' + safeId + '"><td>' + safeId + '</td><td>' + escapeHtml(formatDateTime(order.date)) + '</td><td>' + escapeHtml(order.customerName || '-') + '</td><td>' + escapeHtml(order.customerPhone || '-') + '</td><td>' + itemsCount + '</td><td>' + escapeHtml(formatCurrency(order.total)) + '</td><td>' + escapeHtml(deliveryText) + '</td><td><select class="order-status-select" data-order-id="' + safeId + '">' + ['new', 'processing', 'completed', 'cancelled'].map(function (status) { return '<option value="' + status + '" ' + (order.status === status ? 'selected' : '') + '>' + escapeHtml(ORDER_STATUS_LABEL(status)) + '</option>'; }).join('') + '</select></td></tr><tr class="order-details-row" data-order-details="' + safeId + '" style="display:none;"><td colspan="8">' + renderOrderDetails(order) + '</td></tr>';
     }).join('');
+
+    tbody.querySelectorAll('.order-main-row').forEach(function (row) {
+        row.addEventListener('click', function () { toggleOrderDetails(row.dataset.orderId); });
+    });
+    tbody.querySelectorAll('.order-status-select').forEach(function (select) {
+        select.addEventListener('click', function (event) { event.stopPropagation(); });
+        select.addEventListener('change', function () { updateOrderStatus(select.dataset.orderId, select.value); });
+    });
 }
 
 function renderOrderDetails(order) {
     var itemsHtml = (order.items || []).map(function (item) {
-        return '<div class="order-item-card"><strong>' + item.name + '</strong><div>' + item.brand + ' • ' + item.sizeLabel + '</div><div>الكمية: ' + item.qty + ' • السعر: ' + formatCurrency(item.price) + ' • الإجمالي: ' + formatCurrency(item.lineTotal) + '</div></div>';
+        return '<div class="order-item-card"><strong>' + escapeHtml(item.name || '') + '</strong><div>' + escapeHtml(item.brand || '') + ' • ' + escapeHtml(item.sizeLabel || '') + '</div><div>الكمية: ' + (parseInt(item.qty, 10) || 0) + ' • السعر: ' + escapeHtml(formatCurrency(item.price)) + ' • الإجمالي: ' + escapeHtml(formatCurrency(item.lineTotal)) + '</div></div>';
     }).join('');
 
-    return '<div class="order-details"><div class="order-items-list">' + itemsHtml + '</div><div class="order-meta"><div><strong>الاسم:</strong> ' + (order.customerName || '-') + '<br><strong>الهاتف:</strong> ' + (order.customerPhone || '-') + '<br><strong>العنوان:</strong> ' + (order.address || '-') + '</div><div><strong>طريقة التوصيل:</strong> ' + (order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل') + '<br><strong>المنطقة:</strong> ' + DELIVERY_REGION_LABEL(order.region) + '<br><strong>المجموع الفرعي:</strong> ' + formatCurrency(order.subtotal) + '<br><strong>التوصيل:</strong> ' + formatCurrency(order.deliveryCost || 0) + '<br><strong>الإجمالي:</strong> ' + formatCurrency(order.total) + '</div></div>' + (order.notes ? '<div class="order-item-card"><strong>ملاحظات:</strong><div>' + order.notes + '</div></div>' : '') + '</div>';
+    return '<div class="order-details"><div class="order-items-list">' + itemsHtml + '</div><div class="order-meta"><div><strong>الاسم:</strong> ' + escapeHtml(order.customerName || '-') + '<br><strong>الهاتف:</strong> ' + escapeHtml(order.customerPhone || '-') + '<br><strong>العنوان:</strong> ' + escapeHtml(order.address || '-') + '</div><div><strong>طريقة التوصيل:</strong> ' + (order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل') + '<br><strong>المنطقة:</strong> ' + escapeHtml(DELIVERY_REGION_LABEL(order.region)) + '<br><strong>المجموع الفرعي:</strong> ' + escapeHtml(formatCurrency(order.subtotal)) + '<br><strong>التوصيل:</strong> ' + escapeHtml(formatCurrency(order.deliveryCost || 0)) + '<br><strong>الإجمالي:</strong> ' + escapeHtml(formatCurrency(order.total)) + '</div></div>' + (order.notes ? '<div class="order-item-card"><strong>ملاحظات:</strong><div>' + escapeHtml(order.notes) + '</div></div>' : '') + '</div>';
 }
 
 function toggleOrderDetails(orderId) {
-    var row = document.getElementById('details-' + orderId);
+    var row = document.querySelector('[data-order-details="' + CSS.escape(String(orderId)) + '"]');
     if (!row) return;
     row.style.display = row.style.display === 'none' ? 'table-row' : 'none';
 }

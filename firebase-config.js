@@ -105,9 +105,7 @@
         if (this.name === 'settings') return settingsGet();
         var id = this.id;
         if (this.name === 'orders') {
-            return apiFetch('/orders?id=' + encodeURIComponent(id)).then(function (d) {
-                return makeDocSnap(d && d.order ? d.order : null);
-            }).catch(function () { return makeDocSnap(null); });
+            return makeDocSnap(null);
         }
         var res = RESOURCE[this.name];
         return apiFetch('/' + res.ep).then(function (d) {
@@ -122,9 +120,12 @@
         if (this.name === 'settings') return settingsSet(data);
         var res = RESOURCE[this.name];
         var body = {}; for (var k in data) body[k] = data[k];
-        body.id = this.id;
         var isPublic = this.name === 'orders';
-        return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: body });
+        if (!isPublic) body.id = this.id;
+        return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: body }).then(function (result) {
+            if (isPublic && result && result.id) data.id = result.id;
+            return result;
+        });
     };
 
     DocRef.prototype.update = function (data) {
@@ -267,6 +268,11 @@
     };
 
     global.db = db;
+    global.getTrackedOrder = function (id, phone) {
+        return apiFetch('/orders?id=' + encodeURIComponent(id) + '&phone=' + encodeURIComponent(phone || ''))
+            .then(function (data) { return data && data.order ? data.order : null; })
+            .catch(function () { return null; });
+    };
     global.storeAuth = storeAuth;
     global.PROJECT_ID = 'mery';
 })(window);

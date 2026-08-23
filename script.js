@@ -706,41 +706,33 @@ function renderTrackedOrderItem(item) {
 function renderTrackedOrder(order) {
     var result = document.getElementById('orderTrackingResult');
     if (!result) return;
-    var totalItems = (Array.isArray(order.items) ? order.items : []).reduce(function (sum, item) {
-        return sum + Math.max(1, parseInt(item.qty, 10) || 1);
-    }, 0);
-    var totalText = order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending);
     result.innerHTML = '<div class="tracking-result-card">'
-        + '<div class="tracking-result-head"><div><h4>الطلب ' + escapeHtml(order.id) + '</h4><p>' + formatDateTime(order.date) + '</p></div><span class="tracking-status">' + getOrderStatusLabel(order.status) + '</span></div>'
-        + '<div class="tracking-order-items">' + (order.items || []).map(function (item) { return renderTrackedOrderItem(item); }).join('') + '</div>'
-        + '<div class="tracking-order-summary">'
-        + '<div class="tracking-order-summary-row"><span>عدد المنتجات</span><strong>' + totalItems + '</strong></div>'
-        + '<div class="tracking-order-summary-row"><span>الإجمالي</span><strong>' + totalText + '</strong></div>'
-        + '<div class="tracking-order-summary-row"><span>الحالة</span><strong>' + getOrderStatusLabel(order.status) + '</strong></div>'
-        + '</div></div>';
+        + '<div class="tracking-result-head"><div><h4>الطلب ' + escapeHtml(order.id) + '</h4><p>' + formatDateTime(order.date || order.createdAt) + '</p></div><span class="tracking-status">' + getOrderStatusLabel(order.status) + '</span></div>'
+        + '<div class="tracking-order-summary"><div class="tracking-order-summary-row"><span>الحالة الحالية</span><strong>' + getOrderStatusLabel(order.status) + '</strong></div></div>'
+        + '</div>';
 }
 
 function trackOrder() {
     var input = document.getElementById('orderTrackingInput');
+    var phoneInput = document.getElementById('orderTrackingPhone');
     var result = document.getElementById('orderTrackingResult');
-    if (!input || !result) return;
+    if (!input || !phoneInput || !result) return;
     var orderId = (input.value || '').trim();
-    if (!orderId) {
-        result.innerHTML = '<div class="order-tracking-message error">أدخلي رقم الطلب أولاً.</div>';
+    var phone = (phoneInput.value || '').trim();
+    if (!orderId || !phone) {
+        result.innerHTML = '<div class="order-tracking-message error">أدخلي رقم الطلب ورقم الهاتف المستخدم في الطلب.</div>';
         return;
     }
-    if (!window.db) {
+    if (typeof window.getTrackedOrder !== 'function') {
         result.innerHTML = '<div class="order-tracking-message error">تعذر الاتصال بقاعدة البيانات حالياً.</div>';
         return;
     }
     result.innerHTML = '<div class="order-tracking-message">جاري البحث عن الطلب...</div>';
-    db.collection('orders').doc(orderId).get().then(function (docSnap) {
-        if (!docSnap.exists) {
-            result.innerHTML = '<div class="order-tracking-message error">لم يتم العثور على طلب بهذا الرقم.</div>';
+    window.getTrackedOrder(orderId, phone).then(function (order) {
+        if (!order) {
+            result.innerHTML = '<div class="order-tracking-message error">لم يتم العثور على طلب مطابق.</div>';
             return;
         }
-        var order = docSnap.data() || {};
-        order.id = docSnap.id;
         renderTrackedOrder(order);
     }).catch(function () {
         result.innerHTML = '<div class="order-tracking-message error">تعذر جلب بيانات الطلب حالياً. حاولي مرة أخرى.</div>';

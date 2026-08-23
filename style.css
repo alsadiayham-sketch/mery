@@ -1792,7 +1792,7 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 }
 .order-tracking-form {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 160px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 160px;
     gap: 12px;
     margin-bottom: 18px;
 }

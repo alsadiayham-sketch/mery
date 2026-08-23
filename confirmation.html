@@ -134,17 +134,17 @@
                     if (item.notes) meta += '<span class="order-item-note">ملاحظات: ' + escapeHtml(item.notes) + '</span>';
                     return '<div class="order-item"><div><span class="order-item-name">' + getCustomPackageTitle(item) + '</span>' + meta + '</div><span class="order-item-price pending">يحدد لاحقاً</span></div>';
                 }
-                return '<div class="order-item"><div><span class="order-item-name">' + item.name + '</span><span class="order-item-qty">' + item.brand + ' • ' + item.sizeLabel + ' • x' + item.qty + '</span></div><span class="order-item-price">' + formatCurrency(item.lineTotal) + '</span></div>';
+                return '<div class="order-item"><div><span class="order-item-name">' + escapeHtml(item.name || '') + '</span><span class="order-item-qty">' + escapeHtml(item.brand || '') + ' • ' + escapeHtml(item.sizeLabel || '') + ' • x' + (parseInt(item.qty, 10) || 1) + '</span></div><span class="order-item-price">' + formatCurrency(item.lineTotal) + '</span></div>';
             }).join('');
             var totalItems = (order.items || []).reduce(function (sum, item) { return sum + (parseInt(item.qty, 10) || 1); }, 0);
             document.getElementById('orderCount').textContent = totalItems + ' قطعة';
             document.getElementById('orderDelivery').textContent = order.delivery === 'pickup' ? 'استلام ذاتي' : 'توصيل';
             document.getElementById('orderTotal').textContent = order.totalDisplay || getTotalDisplayText(order.total, !!order.pricingPending);
-            var info = '<span><strong>الاسم:</strong> ' + order.customerName + '</span>';
-            info += '<span><strong>الهاتف:</strong> ' + order.customerPhone + '</span>';
-            if (order.delivery === 'delivery' && order.address) info += '<span><strong>العنوان:</strong> ' + order.address + '</span>';
-            if (order.notes) info += '<span><strong>ملاحظات:</strong> ' + order.notes + '</span>';
-            info += '<span><strong>التاريخ:</strong> ' + formatDateTime(order.date) + '</span>';
+            var info = '<span><strong>الاسم:</strong> ' + escapeHtml(order.customerName || '') + '</span>';
+            info += '<span><strong>الهاتف:</strong> ' + escapeHtml(order.customerPhone || '') + '</span>';
+            if (order.delivery === 'delivery' && order.address) info += '<span><strong>العنوان:</strong> ' + escapeHtml(order.address) + '</span>';
+            if (order.notes) info += '<span><strong>ملاحظات:</strong> ' + escapeHtml(order.notes) + '</span>';
+            info += '<span><strong>التاريخ:</strong> ' + escapeHtml(formatDateTime(order.date)) + '</span>';
             document.getElementById('orderInfo').innerHTML = info;
             document.getElementById('whatsappConfirmBtn').href = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
             createConfetti();
