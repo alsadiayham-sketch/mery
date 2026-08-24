@@ -27,9 +27,11 @@ function normalizePhone(value) {
 }
 
 function getSizeLabel(sizeData) {
+    const size = String(sizeData && sizeData.size ? sizeData.size : "").trim();
+    if (!size || size === "-") return "";
     const unit = sizeData && sizeData.unit ? String(sizeData.unit) : "";
     const suffix = unit === "g" ? " غرام" : unit === "cm" ? " سم" : unit === "ml" ? " مل" : "";
-    return String(sizeData && sizeData.size ? sizeData.size : "-") + suffix;
+    return size + suffix;
 }
 
 async function loadDiscounts(env) {
@@ -131,9 +133,9 @@ export async function onRequestGet(context) {
             .prepare("SELECT id, data, status, created_at FROM orders WHERE id = ?")
             .bind(id)
             .first();
-        if (!row) return json({ order: null }, 404);
+        if (!row) return json({ order: null });
         const order = rowToOrder(row);
-        if (normalizePhone(order.customerPhone) !== phone) return json({ order: null }, 404);
+        if (normalizePhone(order.customerPhone) !== phone) return json({ order: null });
         return json({
             order: {
                 id: order.id,

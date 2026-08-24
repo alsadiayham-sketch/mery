@@ -14,8 +14,10 @@
             <h1>Mery Beauty Store</h1>
             <p>لوحة التحكم · ميري بيوتي ستور</p>
             <form onsubmit="handleLogin(event)">
-                <input type="text" id="loginUser" placeholder="اسم المستخدم" required>
-                <input type="password" id="loginPass" placeholder="كلمة المرور" required>
+                <label class="sr-only" for="loginUser">اسم المستخدم</label>
+                <input type="text" id="loginUser" placeholder="اسم المستخدم" autocomplete="username" required>
+                <label class="sr-only" for="loginPass">كلمة المرور</label>
+                <input type="password" id="loginPass" placeholder="كلمة المرور" autocomplete="current-password" required>
                 <button type="submit">دخول</button>
                 <p class="error" id="loginError"></p>
             </form>
@@ -40,7 +42,7 @@
         </nav>
 
         <div class="admin-status-bar">
-            <div id="adminStatus" class="admin-status">جاري تحميل بيانات فايرستور...</div>
+            <div id="adminStatus" class="admin-status">جاري تحميل بيانات المتجر...</div>
             <div id="adminLoading" class="mini-loader"></div>
         </div>
 

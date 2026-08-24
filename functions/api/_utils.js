@@ -1,4 +1,4 @@
-// Shared helpers for the floria secure API (Cloudflare Pages Functions + D1).
+// Shared helpers for the Mery secure API (Cloudflare Pages Functions + D1).
 // Underscore-prefixed: NOT routed, importable by other functions.
 
 const enc = new TextEncoder();

@@ -23,28 +23,23 @@
         <div class="container nav-container">
             <a href="#" class="logo">
                 <img src="logo.png" alt="Mery Beauty Store" class="logo-img" id="logoImg">
-                <span class="brand-copy">
-                    <span id="logoText" class="logo-text">Mery Beauty Store</span>
-                    <span class="header-tagline" lang="en" dir="ltr">from beautiful girl to another</span>
-                </span>
             </a>
-            <div class="nav-search">
-                <input type="text" id="navSearchInput" placeholder="ابحثي عن منتج..." autocomplete="off">
+            <div class="nav-search" role="search">
+                <input type="search" id="navSearchInput" aria-label="البحث في المنتجات" placeholder="ابحثي عن منتج..." autocomplete="off">
                 <div class="search-dropdown" id="navSearchDropdown"></div>
             </div>
             <ul class="nav-links">
                 <li><a href="#products">المنتجات</a></li>
-                <li></li>
                 <li><a href="#about">من نحن</a></li>
                 <li><a href="#delivery">التوصيل</a></li>
                 <li><a href="#contact">تواصلي معنا</a></li>
                 <li><a href="#order-tracking">تتبّع الطلب</a></li>
             </ul>
-            <div class="cart-icon" id="cartIcon" onclick="toggleCart()">
+            <button type="button" class="cart-icon" id="cartIcon" aria-label="فتح سلة التسوق" aria-controls="cartSidebar" aria-expanded="false" onclick="toggleCart()">
                 🛒
                 <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
-            </div>
-            <button class="mobile-menu-btn" onclick="toggleMobileMenu()">☰</button>
+            </button>
+            <button type="button" class="mobile-menu-btn" aria-label="فتح قائمة التنقل" aria-controls="mobileMenu" aria-expanded="false" onclick="toggleMobileMenu()">☰</button>
         </div>
     </nav>
 
@@ -58,10 +53,14 @@
 
     <section class="hero" id="heroSection">
         <div class="hero-slide active">
-            <img src="hero-bg.png" alt="Mery Beauty Store beauty portrait" fetchpriority="high">
+            <picture>
+                <source media="(min-width: 901px)" srcset="hero-bg-desktop.jpg">
+                <img src="hero-bg.png" alt="Mery Beauty Store beauty portrait" fetchpriority="high">
+            </picture>
             <div class="hero-overlay">
-                <div class="hero-content" lang="en" dir="ltr">
-                    <p class="hero-subtitle" id="heroSubtitle">from beautiful girl to another</p>
+                <div class="hero-content">
+                    <h1 lang="en" dir="ltr">Mery Beauty Store</h1>
+                    <p class="hero-subtitle" id="heroSubtitle" lang="en" dir="ltr">from beautiful girl to another</p>
                     <a href="#products" class="btn-primary">تسوقي الآن</a>
                 </div>
             </div>
@@ -73,8 +72,8 @@
         <div class="container">
             <h2 class="section-title">منتجاتنا</h2>
             <p class="store-notice" id="storeNotice" style="display:none;"></p>
-            <div class="products-search">
-                <input type="text" id="productsSearchInput" placeholder="ابحثي عن منتج، ماركة، أو فئة..." autocomplete="off">
+            <div class="products-search" role="search">
+                <input type="search" id="productsSearchInput" aria-label="البحث في قائمة المنتجات" placeholder="ابحثي عن منتج، ماركة، أو فئة..." autocomplete="off">
                 <div class="search-dropdown" id="productsSearchDropdown"></div>
             </div>
             <div class="filter-toggle-bar" role="group" aria-label="فلترة المنتجات">
@@ -148,8 +147,8 @@
             <p class="section-subtitle">أدخلي رقم الطلب لعرض حالته الحالية وتفاصيله</p>
             <div class="order-tracking-card">
                 <div class="order-tracking-form">
-                    <input type="text" id="orderTrackingInput" placeholder="مثال: ORD-123456" autocomplete="off">
-                    <input type="tel" id="orderTrackingPhone" placeholder="رقم الهاتف المستخدم في الطلب" autocomplete="tel">
+                    <input type="text" id="orderTrackingInput" aria-label="رقم الطلب" placeholder="مثال: ORD-123456" autocomplete="off">
+                    <input type="tel" id="orderTrackingPhone" aria-label="رقم الهاتف المستخدم في الطلب" placeholder="رقم الهاتف المستخدم في الطلب" autocomplete="tel">
                     <button type="button" class="btn-primary" id="orderTrackingBtn" onclick="trackOrder()">بحث</button>
                 </div>
                 <div id="orderTrackingResult" class="order-tracking-result"></div>
@@ -159,7 +158,7 @@
 
     <div class="modal-overlay pdp-overlay" id="pdpModal" style="display:none;" onclick="closePDP(event)">
         <div class="pdp-modal" onclick="event.stopPropagation()">
-            <button class="pdp-close" onclick="closePDP()">✕</button>
+            <button type="button" class="pdp-close" aria-label="إغلاق تفاصيل المنتج" onclick="closePDP()">✕</button>
             <div class="pdp-content">
                 <div class="pdp-image" id="pdpImage"></div>
                 <div class="pdp-info">
@@ -190,10 +189,10 @@
     </div>
 
     <div class="cart-overlay" id="cartOverlay" onclick="toggleCart()"></div>
-    <div class="cart-sidebar" id="cartSidebar">
+    <div class="cart-sidebar" id="cartSidebar" role="dialog" aria-modal="true" aria-labelledby="cartTitle" aria-hidden="true" inert>
         <div class="cart-header">
-            <h3>سلة التسوق</h3>
-            <button class="cart-close" onclick="toggleCart()">✕</button>
+            <h3 id="cartTitle">سلة التسوق</h3>
+            <button type="button" class="cart-close" aria-label="إغلاق سلة التسوق" onclick="toggleCart()">✕</button>
         </div>
         <div class="cart-items" id="cartItems">
             <div class="cart-empty"><span>•</span><p>السلة فارغة</p></div>

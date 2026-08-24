@@ -14,12 +14,29 @@
     --white: #ffffff;
     --shadow: 0 4px 20px rgba(158,15,82,0.08);
     --shadow-hover: 0 12px 32px rgba(158,15,82,0.16);
-    --radius: 20px;
+    --radius: 16px;
     --transition: all 0.3s ease;
 }
 
 /* ===== Reset ===== */
 * { margin: 0; padding: 0; box-sizing: border-box; }
+
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+:focus-visible {
+    outline: 3px solid var(--primary-dark);
+    outline-offset: 3px;
+}
 
 body {
     font-family: 'Nunito', 'Baloo Bhaijaan 2', sans-serif;
@@ -94,9 +111,9 @@ body.has-banner .hero { margin-top: 40px; }
 }
 
 .logo-badge, .logo-img {
-    width: 78px;
-    height: 48px;
-    border-radius: 14px;
+    width: 104px;
+    height: 56px;
+    border-radius: 10px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -104,7 +121,7 @@ body.has-banner .hero { margin-top: 40px; }
     background: var(--bg);
     color: #111;
     font-size: 1.35rem;
-    box-shadow: var(--shadow);
+    box-shadow: none;
 }
 
 .logo-text {
@@ -115,21 +132,6 @@ body.has-banner .hero { margin-top: 40px; }
     color: var(--primary);
     white-space: nowrap;
     line-height: 1.1;
-}
-
-.brand-copy {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-}
-
-.header-tagline {
-    display: block;
-    color: var(--primary-dark);
-    font-family: 'Grandstander', cursive;
-    font-size: 0.72rem;
-    white-space: nowrap;
-    line-height: 1.2;
 }
 
 .nav-links {
@@ -145,6 +147,7 @@ body.has-banner .hero { margin-top: 40px; }
     transition: var(--transition);
     padding: 5px 10px;
     border-radius: 8px;
+    white-space: nowrap;
 }
 
 .nav-links a:hover {
@@ -159,6 +162,8 @@ body.has-banner .hero { margin-top: 40px; }
     font-size: 1.8rem;
     cursor: pointer;
     color: var(--primary);
+    min-width: 44px;
+    min-height: 44px;
 }
 
 .mobile-menu {
@@ -218,14 +223,20 @@ body.has-banner .mobile-menu { top: 102px; }
     display: block;
 }
 
+.hero .hero-slide picture {
+    display: block;
+    height: 78vh;
+}
+
 .hero-overlay {
     position: absolute;
     inset: 0;
-    background: linear-gradient(90deg, rgba(98, 8, 48, 0.55) 0%, rgba(98, 8, 48, 0.2) 38%, rgba(98, 8, 48, 0.02) 70%);
+    background: linear-gradient(90deg, rgba(98, 8, 48, 0.58) 0%, rgba(98, 8, 48, 0.28) 45%, rgba(98, 8, 48, 0.08) 75%);
     display: flex;
     align-items: flex-end;
     justify-content: flex-start;
     text-align: left;
+    direction: ltr;
     padding: 0 6vw 8vh;
 }
 
@@ -235,26 +246,31 @@ body.has-banner .mobile-menu { top: 102px; }
     max-width: 640px;
     padding: 24px 28px;
     border: 1px solid rgba(255, 251, 234, 0.38);
-    border-radius: 28px;
-    background: rgba(158, 15, 82, 0.28);
-    backdrop-filter: blur(8px);
+    border-radius: 16px;
+    background: rgba(112, 9, 55, 0.68);
+    backdrop-filter: blur(4px);
 }
 
 .hero-content h1, .hero-content h2 {
-    font-size: 2.8rem;
-    font-weight: 900;
-    color: var(--white);
-    text-shadow: 0 2px 12px rgba(0,0,0,0.35);
-    margin-bottom: 12px;
+    max-width: 11ch;
+    font-family: 'Baloo Bhaijaan 2', sans-serif;
+    font-size: clamp(2.8rem, 6vw, 5.5rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.03em;
+    color: #fff3a8;
+    text-shadow: 0 3px 18px rgba(80, 0, 35, 0.45);
+    margin-bottom: 14px;
+    text-wrap: balance;
 }
 
 .hero-subtitle, .hero-content p {
     font-family: 'Grandstander', cursive;
-    font-size: clamp(2rem, 5vw, 4rem);
+    font-size: clamp(1.25rem, 2.8vw, 2.2rem);
     color: #fff3a8;
     margin-bottom: 20px;
     font-weight: 700;
-    line-height: 1.05;
+    line-height: 1.2;
     text-shadow: 0 3px 18px rgba(80, 0, 35, 0.45);
 }
 
@@ -518,6 +534,8 @@ body.has-banner .mobile-menu { top: 102px; }
     font-size: 0.8rem;
     font-weight: 700;
     z-index: 2;
+    direction: ltr;
+    unicode-bidi: isolate;
 }
 
 .product-image {
@@ -530,8 +548,8 @@ body.has-banner .mobile-menu { top: 102px; }
 }
 
 .product-image img {
-    max-height: 100%;
-    max-width: 100%;
+    width: 100%;
+    height: 100%;
     object-fit: contain;
     padding: 10px;
 }
@@ -574,7 +592,6 @@ body.has-banner .mobile-menu { top: 102px; }
 }
 
 .product-price .original-price {
-    text-decoration: line-through;
     color: #9ca3af;
     font-size: 0.95rem;
     font-weight: 400;
@@ -728,6 +745,11 @@ body.has-banner .mobile-menu { top: 102px; }
     padding: 5px 10px;
     border-radius: 50%;
     transition: var(--transition);
+    min-width: 44px;
+    min-height: 44px;
+    border: none;
+    background: transparent;
+    color: var(--primary-dark);
 }
 
 .cart-icon:hover { background: var(--primary-lighter); transform: scale(1.1); }
@@ -968,8 +990,8 @@ html[dir="rtl"] .cart-sidebar {
 }
 
 .qty-selector button {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border: none;
     background: var(--primary-lighter);
     color: var(--primary);
@@ -998,9 +1020,28 @@ html[dir="rtl"] .cart-sidebar {
 
 .product-card-actions .btn-add-cart {
     flex: 1;
-    border-radius: 25px;
-    padding: 8px 12px;
-    font-size: 0.85rem;
+    border: 0;
+    border-radius: 999px;
+    padding: 10px 16px;
+    background: var(--primary);
+    color: white;
+    font-family: 'Baloo Bhaijaan 2', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    min-height: 44px;
+    cursor: pointer;
+    transition: transform 0.18s ease-out, background 0.18s ease-out;
+}
+
+.product-card-actions .btn-add-cart:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+.product-card-actions .btn-add-cart:disabled {
+    cursor: not-allowed;
+    opacity: 0.58;
+    transform: none;
 }
 
 /* ===== PDP Modal ===== */
@@ -1244,9 +1285,7 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
     .nav-search { flex: 0 1 180px; }
     .nav-search input { padding: 8px 12px; font-size: 0.8rem; }
     .cart-sidebar { width: 100vw; max-width: 100vw; }
-    .logo-text { font-size: 0.82rem; }
-    .header-tagline { font-size: 0.58rem; }
-    .logo-img { height: 38px; width: 62px; }
+    .logo-img { height: 44px; width: 82px; }
     .navbar { padding: 8px 0; }
     .pdp-content { grid-template-columns: 1fr; }
     .pdp-image { border-radius: 20px 20px 0 0; min-height: 200px; }
@@ -1271,9 +1310,7 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
     .nav-search { flex: 0 1 150px; }
     .nav-search input { padding: 8px 12px; font-size: 0.8rem; }
     .cart-sidebar { width: 100vw; max-width: 100vw; }
-    .logo-text { font-size: 0.82rem; }
-    .header-tagline { font-size: 0.58rem; }
-    .logo-img { height: 38px; width: 62px; }
+    .logo-img { height: 44px; width: 82px; }
     .navbar { padding: 8px 0; }
     .pdp-content { grid-template-columns: 1fr; }
     .pdp-image { border-radius: 20px 20px 0 0; min-height: 200px; }
@@ -1320,7 +1357,7 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 
     .hero-subtitle,
     .hero-content p {
-        font-size: clamp(1.8rem, 9vw, 3rem);
+        font-size: clamp(1.15rem, 5.5vw, 1.75rem);
     }
 
     .filter-toggle-bar {
@@ -1341,12 +1378,30 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 }
 
 @media (max-width: 520px) {
-    .brand-copy {
-        max-width: 132px;
+    .products-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
     }
 
-    .header-tagline {
-        white-space: normal;
+    .product-image {
+        height: 260px;
+    }
+
+    .product-info {
+        padding: 16px 18px;
+    }
+
+    .product-info h3 {
+        font-size: 1rem;
+    }
+
+    .product-card-actions {
+        flex-direction: row;
+        padding: 10px 16px 16px;
+    }
+
+    .product-card-actions .qty-sm {
+        transform: none;
     }
 
     .cart-icon {

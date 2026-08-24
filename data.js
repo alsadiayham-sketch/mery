@@ -104,6 +104,7 @@ function getUnitLabel(unit) {
 }
 
 function getSizeLabel(sizeData) {
+    if (!sizeData || !String(sizeData.size || '').trim() || String(sizeData.size).trim() === '-') return '';
     var label = getUnitLabel(sizeData.unit);
     if (!label) return String(sizeData.size);
     return String(sizeData.size) + ' ' + label;

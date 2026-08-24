@@ -219,11 +219,11 @@ async function initializeAdmin() {
     if (isInitializing) return;
     isInitializing = true;
     setAdminLoading(true);
-    setAdminStatus('جاري مزامنة فايرستور...', '');
+    setAdminStatus('جاري مزامنة بيانات المتجر...', '');
 
     if (!window.db) {
         setAdminLoading(false);
-        setAdminStatus('تعذر تهيئة فايربيس. تأكدي من الاتصال بالإنترنت.', 'error');
+        setAdminStatus('تعذر الاتصال بقاعدة بيانات المتجر. تأكدي من الاتصال بالإنترنت.', 'error');
         isInitializing = false;
         return;
     }
@@ -809,7 +809,7 @@ function renderTopProductsChart() {
 }
 
 async function seedData(force) {
-    var shouldForce = force || confirm('سيتم تعبئة فايرستور بالمنتجات الافتراضية إذا كان فارغاً. للكتابة فوق البيانات الحالية اختاري موافق.');
+    var shouldForce = force || confirm('سيتم تعبئة قاعدة البيانات بالمنتجات الافتراضية إذا كانت فارغة. للكتابة فوق البيانات الحالية اختاري موافق.');
     setAdminLoading(true);
     var result = await seedFirestoreData(shouldForce);
     setAdminLoading(false);

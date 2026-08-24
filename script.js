@@ -28,7 +28,7 @@ initializeOrderTracking();
     setDeliveryMethod(deliveryMethod);
     setLoadingState(true);
     subscribeToStoreData();
-    // Fallback if Firestore takes too long
+    // Fallback if the store API takes too long.
     setTimeout(function () {
         if (!storeLoadState.products || !storeLoadState.discounts || !storeLoadState.settings) {
             // Only apply fallback if we truly have no data yet
@@ -77,7 +77,7 @@ function markStoreLoaded(key) {
 
 function subscribeToStoreData() {
     if (!window.db) {
-        applyFallbackStoreData('تعذر الاتصال بفايربيس، تم عرض البيانات الاحتياطية.');
+        applyFallbackStoreData('تعذر الاتصال بقاعدة بيانات المتجر.');
         return;
     }
 
@@ -107,7 +107,7 @@ function subscribeToStoreData() {
         syncCartWithProducts();
         markStoreLoaded('products');
     }, function () {
-        if (!storeLoadState.products) applyFallbackStoreData('تعذر تحميل المنتجات من فايرستور، تم استخدام البيانات الاحتياطية.');
+        if (!storeLoadState.products) applyFallbackStoreData('تعذر تحميل المنتجات حالياً.');
         else setStoreMessage('تعذر تحديث المنتجات حالياً.', 'error');
     }));
 
@@ -247,7 +247,8 @@ function getFilteredProducts(filter) {
 }
 
 function getPriceHTML(pricing) {
-    return (pricing.hasDiscount ? '<span class="original-price">' + formatCurrency(pricing.original) + '</span>' : '') + '<span>' + formatCurrency(pricing.final) + '</span>';
+    return (pricing.hasDiscount ? '<s class="original-price"><span class="sr-only">السعر قبل الخصم: </span>' + formatCurrency(pricing.original) + '</s>' : '') +
+        '<span><span class="sr-only">' + (pricing.hasDiscount ? 'السعر الآن: ' : 'السعر: ') + '</span>' + formatCurrency(pricing.final) + '</span>';
 }
 
 function renderProducts(productsToShow) {
@@ -266,9 +267,12 @@ function renderProducts(productsToShow) {
         var statusBadge = getStatusBadge(product.status);
         var discountBadge = pricing.hasDiscount ? '<span class="discount-badge">-' + pricing.discountPercent + '%</span>' : '';
         var soldOutClass = product.status === 'soldout' ? 'sold-out' : '';
-        var sizeSelector = product.sizes.length > 1
+        var usableSizes = product.sizes.filter(function (size) { return Boolean(getSizeLabel(size)); });
+        var sizeLabel = getSizeLabel(sizeData);
+        var sizeSelector = usableSizes.length > 1
             ? '<div class="card-size-selector"><label for="sizeSelect-' + product.id + '">الحجم:</label><select id="sizeSelect-' + product.id + '" class="size-select" onclick="event.stopPropagation()" onchange="updateProductSize(\'' + product.id + '\', this.value)">' + product.sizes.map(function (size, idx) { return '<option value="' + idx + '">' + getSizeLabel(size) + '</option>'; }).join('') + '</select></div>'
-            : '<div class="card-size-single"><span>الحجم:</span><strong>' + getSizeLabel(sizeData) + '</strong></div>';
+            : (sizeLabel ? '<div class="card-size-single"><span>الحجم:</span><strong>' + sizeLabel + '</strong></div>' : '');
+        var sizeMeta = sizeLabel ? '<span class="product-size" id="productSize-' + product.id + '">' + sizeLabel + '</span>' : '';
 
         var card = document.createElement('div');
         card.className = 'product-card ' + soldOutClass;
@@ -282,7 +286,7 @@ function renderProducts(productsToShow) {
             '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<span class="product-brand">' + product.brand + '</span>',
             '<h3>' + product.name + '</h3>',
-            '<div class="product-meta"><span>' + product.category + '</span><span class="product-size" id="productSize-' + product.id + '">' + getSizeLabel(sizeData) + '</span></div>',
+            '<div class="product-meta"><span>' + product.category + '</span>' + sizeMeta + '</div>',
             '<div class="product-price" id="productPrice-' + product.id + '">' + getPriceHTML(pricing) + '</div>',
             '</div>',
             '<div class="product-card-controls">' + sizeSelector + '</div>',
@@ -405,7 +409,14 @@ function scrollToProduct(productId) {
 }
 
 function toggleMobileMenu() {
-    document.getElementById('mobileMenu').classList.toggle('active');
+    var menu = document.getElementById('mobileMenu');
+    var button = document.querySelector('.mobile-menu-btn');
+    if (!menu) return;
+    var isOpen = menu.classList.toggle('active');
+    if (button) {
+        button.setAttribute('aria-expanded', String(isOpen));
+        button.setAttribute('aria-label', isOpen ? 'إغلاق قائمة التنقل' : 'فتح قائمة التنقل');
+    }
 }
 
 document.querySelectorAll('a[href^="#"]').forEach(function (anchor) {
@@ -854,20 +865,58 @@ function updateCartBadge() {
 function toggleCart() {
     var sidebar = document.getElementById('cartSidebar');
     var overlay = document.getElementById('cartOverlay');
+    var cartButton = document.getElementById('cartIcon');
     if (!sidebar || !overlay) return;
     var isOpen = sidebar.classList.contains('active');
 
     if (isOpen) {
         sidebar.classList.remove('active');
         overlay.classList.remove('active');
+        sidebar.setAttribute('aria-hidden', 'true');
+        sidebar.setAttribute('inert', '');
         document.body.style.overflow = '';
+        if (cartButton) {
+            cartButton.setAttribute('aria-expanded', 'false');
+            cartButton.setAttribute('aria-label', 'فتح سلة التسوق');
+            cartButton.focus();
+        }
     } else {
         sidebar.classList.add('active');
         overlay.classList.add('active');
+        sidebar.setAttribute('aria-hidden', 'false');
+        sidebar.removeAttribute('inert');
         document.body.style.overflow = 'hidden';
+        if (cartButton) {
+            cartButton.setAttribute('aria-expanded', 'true');
+            cartButton.setAttribute('aria-label', 'إغلاق سلة التسوق');
+        }
         renderCart();
+        var closeButton = sidebar.querySelector('.cart-close');
+        if (closeButton) closeButton.focus();
     }
 }
+
+document.addEventListener('keydown', function (event) {
+    var sidebar = document.getElementById('cartSidebar');
+    if (!sidebar || !sidebar.classList.contains('active')) return;
+    if (event.key === 'Escape') {
+        event.preventDefault();
+        toggleCart();
+        return;
+    }
+    if (event.key !== 'Tab') return;
+    var focusable = Array.prototype.slice.call(sidebar.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'));
+    if (!focusable.length) return;
+    var first = focusable[0];
+    var last = focusable[focusable.length - 1];
+    if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+    }
+});
 
 function renderCart() {
     var container = document.getElementById('cartItems');
@@ -973,8 +1022,9 @@ function renderHeroSlider(slides) {
             media = '<img src="' + slide.url + '" alt="Mery Beauty Store hero image">';
         }
         return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + media +
-            '<div class="hero-overlay"><div class="hero-content" lang="en" dir="ltr">' +
-            '<p class="hero-subtitle">from beautiful girl to another</p>' +
+            '<div class="hero-overlay"><div class="hero-content">' +
+            '<h1 lang="en" dir="ltr">Mery Beauty Store</h1>' +
+            '<p class="hero-subtitle" lang="en" dir="ltr">from beautiful girl to another</p>' +
             '<a href="#products" class="btn-primary">تسوقي الآن</a>' +
             '</div></div></div>';
     }).join('');
