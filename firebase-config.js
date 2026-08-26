@@ -48,6 +48,12 @@
         return [];
     }
 
+    function notifyDataChanged() {
+        if (typeof global.dispatchEvent === 'function' && typeof global.CustomEvent === 'function') {
+            global.dispatchEvent(new global.CustomEvent('mery:data-changed'));
+        }
+    }
+
     function makeDocSnap(item) {
         var id = item && item.id;
         return {
@@ -124,6 +130,7 @@
         if (!isPublic) body.id = this.id;
         return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: body }).then(function (result) {
             if (isPublic && result && result.id) data.id = result.id;
+            if (!isPublic) notifyDataChanged();
             return result;
         });
     };
@@ -131,7 +138,10 @@
     DocRef.prototype.update = function (data) {
         var self = this;
         if (this.name === 'orders') {
-            return apiFetch('/orders?id=' + encodeURIComponent(this.id), { method: 'PATCH', auth: true, body: { status: data.status } });
+            return apiFetch('/orders?id=' + encodeURIComponent(this.id), { method: 'PATCH', auth: true, body: { status: data.status } }).then(function (result) {
+                notifyDataChanged();
+                return result;
+            });
         }
         if (this.name === 'settings') {
             return settingsGet().then(function (snap) {
@@ -150,7 +160,10 @@
 
     DocRef.prototype.delete = function () {
         var res = RESOURCE[this.name];
-        return apiFetch('/' + res.ep + '?id=' + encodeURIComponent(this.id), { method: 'DELETE', auth: true });
+        return apiFetch('/' + res.ep + '?id=' + encodeURIComponent(this.id), { method: 'DELETE', auth: true }).then(function (result) {
+            notifyDataChanged();
+            return result;
+        });
     };
 
     // Polls get() on an interval (emulates Firestore doc onSnapshot). Used for
@@ -184,6 +197,7 @@
         var res = RESOURCE[this.name];
         var isPublic = this.name === 'orders';
         return apiFetch('/' + res.ep, { method: 'POST', auth: !isPublic, body: data }).then(function (d) {
+            if (!isPublic) notifyDataChanged();
             return { id: d && d.id };
         });
     };

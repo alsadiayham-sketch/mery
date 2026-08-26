@@ -12,9 +12,9 @@ var discounts = [];
 var orders = [];
 var heroSlides = [];
 var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
-var unsubscribers = [];
 var charts = {};
 var isInitializing = false;
+var adminRefreshTimer = null;
 
 var adminReady = {
     products: false,
@@ -88,7 +88,6 @@ function handleLogin(event) {
 
 function logout() {
     storeAuth.logout();
-    unsubscribers.forEach(function (unsubscribe) { if (typeof unsubscribe === 'function') unsubscribe(); });
     location.reload();
 }
 
@@ -259,7 +258,7 @@ async function initializeAdmin() {
 
     try {
         await ensureSeedIfEmpty();
-        subscribeToCollections();
+        await loadAdminData(false);
     } catch (error) {
         console.error(error);
         setAdminStatus('حدث خطأ أثناء تحميل البيانات.', 'error');
@@ -277,72 +276,54 @@ async function ensureSeedIfEmpty() {
     }
 }
 
-function subscribeToCollections() {
-    unsubscribers.forEach(function (unsubscribe) { if (typeof unsubscribe === 'function') unsubscribe(); });
-    unsubscribers = [];
+async function loadAdminData(isRefresh) {
+    if (isRefresh) setAdminLoading(true);
+    var results = await Promise.all([
+        db.collection('products').get(),
+        db.collection('discounts').get(),
+        db.collection('orders').orderBy('date', 'desc').get(),
+        db.collection('settings').doc('config').get(),
+        db.collection('heroDisplay').orderBy('order', 'asc').get()
+    ]);
 
-    unsubscribers.push(db.collection('products').onSnapshot(function (snapshot) {
-        products = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d); });
-        adminReady.products = true;
-        renderProductsTable();
-        renderDiscountValueOptions();
-        checkAdminReady();
-    }, function (error) {
-        console.error(error);
-        setAdminStatus('تعذر تحميل المنتجات.', 'error');
-        setAdminLoading(false);
-    }));
+    products = results[0].docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d); });
+    discounts = results[1].docs.map(function (docSnap) { return normalizeDiscount(docSnap.data()); });
+    orders = results[2].docs.map(function (docSnap) {
+        var data = docSnap.data();
+        data._docId = docSnap.id;
+        return data;
+    });
+    siteSettings = normalizeSettings(results[3].exists ? results[3].data() : DEFAULT_SITE_SETTINGS);
+    heroSlides = results[4].docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
 
-    unsubscribers.push(db.collection('discounts').onSnapshot(function (snapshot) {
-        discounts = snapshot.docs.map(function (docSnap) { return normalizeDiscount(docSnap.data()); });
-        adminReady.discounts = true;
-        renderDiscountsTable();
-        checkAdminReady();
-    }, function (error) {
-        console.error(error);
-        setAdminStatus('تعذر تحميل الخصومات.', 'error');
-        setAdminLoading(false);
-    }));
+    adminReady.products = true;
+    adminReady.discounts = true;
+    adminReady.orders = true;
+    adminReady.settings = true;
+    renderProductsTable();
+    renderDiscountValueOptions();
+    renderDiscountsTable();
+    renderOrdersTable();
+    renderDashboard();
+    loadSettingsForm();
+    renderHeroTable();
+    setAdminLoading(false);
+    if (!isRefresh) setAdminStatus('تمت مزامنة البيانات بنجاح.', 'success');
+}
 
-    unsubscribers.push(db.collection('orders').orderBy('date', 'desc').onSnapshot(function (snapshot) {
-        orders = snapshot.docs.map(function (docSnap) {
-            var data = docSnap.data();
-            data._docId = docSnap.id;
-            return data;
+function scheduleAdminRefresh() {
+    if (isInitializing) return;
+    if (adminRefreshTimer) clearTimeout(adminRefreshTimer);
+    adminRefreshTimer = setTimeout(function () {
+        loadAdminData(true).catch(function (error) {
+            console.error(error);
+            setAdminLoading(false);
+            setAdminStatus('تعذر تحديث البيانات بعد الحفظ.', 'error');
         });
-        adminReady.orders = true;
-        renderOrdersTable();
-        renderDashboard();
-        checkAdminReady();
-    }, function (error) {
-        console.error(error);
-        setAdminStatus('تعذر تحميل الطلبات.', 'error');
-        setAdminLoading(false);
-    }));
-
-    unsubscribers.push(db.collection('settings').doc('config').onSnapshot(function (docSnap) {
-        siteSettings = normalizeSettings(docSnap.exists ? docSnap.data() : DEFAULT_SITE_SETTINGS);
-        adminReady.settings = true;
-        loadSettingsForm();
-        checkAdminReady();
-    }, function (error) {
-        console.error(error);
-        setAdminStatus('تعذر تحميل الإعدادات.', 'error');
-        setAdminLoading(false);
-    }));
-
-    unsubscribers.push(db.collection('heroDisplay').orderBy('order', 'asc').onSnapshot(function (snapshot) {
-        heroSlides = snapshot.docs.map(function (docSnap) { var d = docSnap.data(); d.id = docSnap.id; return d; });
-        renderHeroTable();
-    }, function () { /* hero is optional, ignore errors */ }));
+    }, 250);
 }
 
-function checkAdminReady() {
-    if (adminReady.products && adminReady.discounts && adminReady.orders && adminReady.settings) {
-        setAdminLoading(false);
-        setAdminStatus('تمت مزامنة البيانات بنجاح.', 'success');
-    }
-}
+window.addEventListener('mery:data-changed', scheduleAdminRefresh);
 
 function renderProductsTable() {
     var tbody = document.getElementById('productsTableBody');
