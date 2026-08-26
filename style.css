@@ -233,7 +233,7 @@ body.has-banner .mobile-menu { top: 102px; }
     inset: 0;
     background: linear-gradient(180deg, rgba(98, 8, 48, 0.18) 0%, rgba(98, 8, 48, 0.44) 100%);
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     justify-content: center;
     text-align: center;
     direction: ltr;
