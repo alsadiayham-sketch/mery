@@ -259,8 +259,8 @@ body.has-banner .mobile-menu { top: 102px; }
 }
 
 .hero-subtitle, .hero-content p {
-    font-family: 'Grandstander', cursive;
-    font-size: clamp(1.25rem, 2.8vw, 2.2rem);
+    font-family: 'Dancing Script', cursive;
+    font-size: clamp(1.8rem, 4vw, 3.25rem);
     color: #fff3a8;
     margin-bottom: 20px;
     font-weight: 700;
