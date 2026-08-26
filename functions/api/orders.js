@@ -87,7 +87,10 @@ async function buildTrustedItems(items, env) {
             continue;
         }
 
-        const productId = cleanText(rawItem && rawItem.id, 100);
+        // Older cached checkout pages send productId, while the current cart
+        // representation uses id. Accept both so a cached static page cannot
+        // make an otherwise valid checkout fail during a deployment update.
+        const productId = cleanText(rawItem && (rawItem.id || rawItem.productId), 100);
         if (!productId) continue;
         const row = await env.DB.prepare("SELECT data FROM products WHERE id = ?").bind(productId).first();
         if (!row) continue;
