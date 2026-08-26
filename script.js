@@ -168,8 +168,12 @@ function renderStorefront() {
 }
 
 function applySettings() {
-    var heroSub = document.getElementById('heroSubtitle');
-    if (heroSub) heroSub.textContent = siteSettings.heroSubtitle;
+    document.querySelectorAll('.hero-title').forEach(function (heroTitle) {
+        heroTitle.textContent = siteSettings.heroTitle;
+    });
+    document.querySelectorAll('.hero-subtitle').forEach(function (heroSub) {
+        heroSub.textContent = siteSettings.heroSubtitle;
+    });
 
     var aboutText = document.getElementById('aboutText');
     if (aboutText) aboutText.innerHTML = siteSettings.aboutText.replace(/\n/g, '<br>');
@@ -1023,8 +1027,8 @@ function renderHeroSlider(slides) {
         }
         return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + media +
             '<div class="hero-overlay"><div class="hero-content">' +
-            '<h1 lang="en" dir="ltr">Mery Beauty Store</h1>' +
-            '<p class="hero-subtitle" lang="en" dir="ltr">from beautiful girl to another</p>' +
+            '<h1 class="hero-title" lang="en" dir="ltr">' + escapeHtml(siteSettings.heroTitle) + '</h1>' +
+            '<p class="hero-subtitle" lang="en" dir="ltr">' + escapeHtml(siteSettings.heroSubtitle) + '</p>' +
             '<a href="#products" class="btn-primary">تسوقي الآن</a>' +
             '</div></div></div>';
     }).join('');

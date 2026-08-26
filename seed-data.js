@@ -293,6 +293,7 @@ window.seedFirestoreData = function(clearExisting) {
 
         var settings = {
             whatsappNumber: '972569236758',
+            heroTitle: 'Mery Glam',
             heroSubtitle: 'from beautiful girl to another',
             aboutText: 'في Mery Beauty Store اخترنا لكِ منتجات الجمال والعناية بلمسة مرحة وناعمة.\nتسوّقي المكياج، العناية، الباكجات والعروض بسهولة، وكل طلب مجهّز بحب من جميلة إلى جميلة.',
             instagramLink: 'https://www.instagram.com/',

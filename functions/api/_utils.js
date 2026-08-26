@@ -70,6 +70,12 @@ export async function makeUserRecord(name, role, password) {
     return { name: String(name || ""), role: role === "worker" ? "worker" : "admin", salt, iterations, hash, algo: "PBKDF2-SHA256" };
 }
 
+export function passwordError(password) {
+    if (typeof password !== "string" || password.length < 12) return "password must be at least 12 characters";
+    if (password.length > 200) return "password is too long";
+    return null;
+}
+
 export function safeEqual(a, b) {
     if (typeof a !== "string" || typeof b !== "string" || a.length !== b.length) return false;
     let diff = 0;
@@ -112,6 +118,16 @@ export function getBearer(request) {
 export async function getSessionVersion(env) {
     const row = await env.DB.prepare("SELECT value FROM meta WHERE key = 'sessionVersion'").first();
     return row ? String(row.value) : "1";
+}
+
+export async function bumpSessionVersion(env) {
+    const current = parseInt(await getSessionVersion(env), 10) || 1;
+    const next = current + 1;
+    await env.DB
+        .prepare("INSERT INTO meta (key, value) VALUES ('sessionVersion', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value")
+        .bind(String(next))
+        .run();
+    return next;
 }
 
 // Returns the verified token payload, or null. Also enforces the global

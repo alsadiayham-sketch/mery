@@ -102,6 +102,40 @@ function killAllSessions() {
     });
 }
 
+function changeOwnPassword(event) {
+    event.preventDefault();
+    var currentPassword = document.getElementById('currentPassword').value;
+    var newPassword = document.getElementById('newPassword').value;
+    var confirmPassword = document.getElementById('confirmPassword').value;
+    var button = document.getElementById('changePasswordBtn');
+    if (newPassword.length < 12) {
+        setAdminStatus('يجب أن تتكون كلمة المرور الجديدة من 12 حرفاً على الأقل.', 'error');
+        return;
+    }
+    if (newPassword !== confirmPassword) {
+        setAdminStatus('كلمتا المرور الجديدتان غير متطابقتين.', 'error');
+        return;
+    }
+    button.disabled = true;
+    button.textContent = 'جاري الحفظ...';
+    storeAuth.changePassword(currentPassword, newPassword, confirmPassword).then(function () {
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        setAdminStatus('تم تغيير كلمة المرور. سيتم تسجيل خروجك الآن.', 'success');
+        setTimeout(function () { logout(); }, 1200);
+    }).catch(function (err) {
+        var message = err && err.message;
+        if (message === 'current password is incorrect') message = 'كلمة المرور الحالية غير صحيحة.';
+        else if (message === 'new passwords do not match') message = 'كلمتا المرور الجديدتان غير متطابقتين.';
+        else if (message === 'password must be at least 12 characters') message = 'يجب أن تتكون كلمة المرور الجديدة من 12 حرفاً على الأقل.';
+        else message = 'تعذر تغيير كلمة المرور حالياً. حاولي مرة أخرى.';
+        setAdminStatus(message, 'error');
+        button.disabled = false;
+        button.textContent = 'تغيير كلمة المرور';
+    });
+}
+
 function switchTab(tab, button) {
     document.querySelectorAll('.tab-content').forEach(function (content) { content.classList.remove('active'); });
     document.querySelectorAll('.tab-btn').forEach(function (tabButton) { tabButton.classList.remove('active'); });
@@ -151,7 +185,6 @@ function renderUsersTable() {
         var roleLabel = u.role === 'worker' ? 'موظف' : 'مدير';
         return '<tr><td>' + escapeHtml(u.username) + '</td><td>' + escapeHtml(u.name || '') + '</td><td>' + roleLabel +
             '</td><td><button class="action-link" onclick="editUser(\'' + escapeHtml(u.username) + '\')">تعديل</button>' +
-            '<button class="action-link" onclick="resetUserPassword(\'' + escapeHtml(u.username) + '\')">إعادة تعيين</button>' +
             '<button class="action-link" onclick="removeUser(\'' + escapeHtml(u.username) + '\')">حذف</button></td></tr>';
     });
     tbody.innerHTML = rows.join('') || '<tr><td colspan="4">لا يوجد موظفون.</td></tr>';
@@ -168,10 +201,15 @@ function saveUser(event) {
         role: document.getElementById('userRole').value === 'worker' ? 'worker' : 'admin',
         password: document.getElementById('userPassword').value
     };
-    storeAuth.saveUser(payload).then(function () {
+    storeAuth.saveUser(payload).then(function (result) {
         document.getElementById('userUsername').value = '';
         document.getElementById('userName').value = '';
         document.getElementById('userPassword').value = '';
+        if (result && result.sessionInvalidated) {
+            setAdminStatus('تم حفظ الموظف. سيتم تسجيل خروجك لحماية الحسابات.', 'success');
+            setTimeout(function () { logout(); }, 1200);
+            return;
+        }
         setAdminStatus('تم حفظ الموظف.', 'success');
         loadUsers();
     }).catch(function (err) {
@@ -193,25 +231,16 @@ function removeUser(username) {
     if (!currentUser || currentUser.role !== 'admin') return;
     if (username === currentUser.username) { alert('لا يمكنك حذف حسابك الحالي.'); return; }
     if (!confirm('حذف الموظف ' + username + '؟')) return;
-    storeAuth.deleteUser(username).then(function () {
+    storeAuth.deleteUser(username).then(function (result) {
+        if (result && result.sessionInvalidated) {
+            setAdminStatus('تم حذف الموظف. سيتم تسجيل خروجك لحماية الحسابات.', 'success');
+            setTimeout(function () { logout(); }, 1200);
+            return;
+        }
         setAdminStatus('تم حذف الموظف.', 'success');
         loadUsers();
     }).catch(function (err) {
         setAdminStatus((err && err.message) ? err.message : 'تعذر حذف الموظف.', 'error');
-    });
-}
-
-function resetUserPassword(username) {
-    if (!currentUser || currentUser.role !== 'admin') return;
-    var u = null;
-    for (var i = 0; i < usersList.length; i++) { if (usersList[i].username === username) { u = usersList[i]; break; } }
-    if (!u) return;
-    var password = prompt('كلمة المرور الجديدة للمستخدم ' + username, '5555');
-    if (password == null) return;
-    storeAuth.saveUser({ username: username, name: u.name, role: u.role, password: String(password || '5555') }).then(function () {
-        setAdminStatus('تم تحديث كلمة المرور.', 'success');
-    }).catch(function () {
-        setAdminStatus('تعذر تحديث كلمة المرور.', 'error');
     });
 }
 
@@ -615,12 +644,15 @@ function loadSettingsForm() {
     document.getElementById('settingAbout').value = siteSettings.aboutText || '';
     document.getElementById('settingInstagram').value = siteSettings.instagramLink || '';
     document.getElementById('settingTiktok').value = siteSettings.tiktokLink || '';
+    var heroBrandName = document.getElementById('heroBrandName');
+    if (heroBrandName) heroBrandName.value = siteSettings.heroTitle || '';
 }
 
 async function saveSettingsForm(event) {
     event.preventDefault();
     siteSettings = normalizeSettings({
         whatsappNumber: document.getElementById('settingWhatsappNumber').value,
+        heroTitle: siteSettings.heroTitle,
         heroSubtitle: document.getElementById('settingHero').value,
         aboutText: document.getElementById('settingAbout').value,
         instagramLink: document.getElementById('settingInstagram').value,
@@ -630,6 +662,25 @@ async function saveSettingsForm(event) {
     await db.collection('settings').doc('config').set(siteSettings, { merge: true });
     setAdminLoading(false);
     setAdminStatus('تم حفظ الإعدادات بنجاح.', 'success');
+}
+
+async function saveHeroBranding(event) {
+    event.preventDefault();
+    var title = document.getElementById('heroBrandName').value.trim();
+    if (!title) {
+        setAdminStatus('أدخلي اسم الواجهة أولاً.', 'error');
+        return;
+    }
+    siteSettings = normalizeSettings(Object.assign({}, siteSettings, { heroTitle: title }));
+    setAdminLoading(true);
+    try {
+        await db.collection('settings').doc('config').set(siteSettings, { merge: true });
+        setAdminStatus('تم حفظ اسم الواجهة بنجاح.', 'success');
+    } catch (err) {
+        setAdminStatus('تعذر حفظ اسم الواجهة حالياً.', 'error');
+    } finally {
+        setAdminLoading(false);
+    }
 }
 
 function renderOrdersTable() {

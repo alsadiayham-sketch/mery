@@ -260,6 +260,13 @@
         getToken: getToken,
         logout: function () { clearToken(); },
         killAll: function () { return apiFetch('/logout-all', { method: 'POST', auth: true }); },
+        changePassword: function (currentPassword, newPassword, confirmPassword) {
+            return apiFetch('/change-password', {
+                method: 'POST',
+                auth: true,
+                body: { currentPassword: currentPassword, newPassword: newPassword, confirmPassword: confirmPassword }
+            });
+        },
         // user management (admin only)
         listUsers: function () { return apiFetch('/users', { auth: true }).then(function (d) { return d.users || []; }); },
         saveUser: function (u) { return apiFetch('/users', { method: 'POST', auth: true, body: u }); },

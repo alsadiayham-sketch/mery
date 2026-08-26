@@ -1,4 +1,4 @@
-import { json, bad, requireRole, makeUserRecord, pbkdf2Hex, genSalt, readJson } from "./_utils.js";
+import { json, bad, requireRole, makeUserRecord, pbkdf2Hex, genSalt, readJson, passwordError, bumpSessionVersion } from "./_utils.js";
 
 // Users are sensitive: only admins may touch this endpoint, and we NEVER
 // return salt/hash to the client. Passwords are write-only.
@@ -28,12 +28,14 @@ export async function onRequestPost(context) {
     const password = body.password ? String(body.password) : "";
 
     const existing = await context.env.DB
-        .prepare("SELECT username FROM users WHERE username = ?")
+        .prepare("SELECT username, role FROM users WHERE username = ?")
         .bind(username)
         .first();
 
     if (!existing) {
         if (!password) return bad(400, "password required for new user");
+        const policyError = passwordError(password);
+        if (policyError) return bad(400, policyError);
         const rec = await makeUserRecord(name, role, password);
         await context.env.DB
             .prepare("INSERT INTO users (username, name, role, salt, iterations, hash, algo, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)")
@@ -42,8 +44,13 @@ export async function onRequestPost(context) {
         return json({ user: { username, name: rec.name, role: rec.role } });
     }
 
+    if (username === gate.user.sub && password) return bad(400, "use the password change form");
+    if (username === gate.user.sub && role !== existing.role) return bad(400, "cannot change your own role");
+
     // Update name/role, and password only if provided.
     if (password) {
+        const policyError = passwordError(password);
+        if (policyError) return bad(400, policyError);
         const salt = genSalt();
         const iterations = 100000;
         const hash = await pbkdf2Hex(password, salt, iterations);
@@ -57,7 +64,9 @@ export async function onRequestPost(context) {
             .bind(name, role, username)
             .run();
     }
-    return json({ user: { username, name, role } });
+    const sessionInvalidated = password || role !== existing.role;
+    if (sessionInvalidated) await bumpSessionVersion(context.env);
+    return json({ user: { username, name, role }, sessionInvalidated });
 }
 
 // DELETE /api/users?username=... -> admin. Refuses to remove the last admin.
@@ -80,5 +89,6 @@ export async function onRequestDelete(context) {
         if (row && row.c <= 1) return bad(400, "cannot remove the last admin");
     }
     await context.env.DB.prepare("DELETE FROM users WHERE username = ?").bind(username).run();
-    return json({ ok: true });
+    await bumpSessionVersion(context.env);
+    return json({ ok: true, sessionInvalidated: true });
 }

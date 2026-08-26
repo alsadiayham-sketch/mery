@@ -4,6 +4,7 @@ var DEFAULT_DISCOUNTS = [];
 
 var DEFAULT_SITE_SETTINGS = {
     whatsappNumber: '972569236758',
+    heroTitle: 'Mery Glam',
     heroSubtitle: 'from beautiful girl to another',
     aboutText: 'في Mery Beauty Store اخترنا لكِ منتجات الجمال والعناية بلمسة مرحة وناعمة.\nتسوّقي المكياج، العناية، الباكجات والعروض بسهولة، وكل طلب مجهّز بحب من جميلة إلى جميلة.',
     instagramLink: 'https://www.instagram.com/',
@@ -82,6 +83,7 @@ function normalizeSettings(settings) {
     var source = settings || {};
     return {
         whatsappNumber: extractWhatsappNumber(source.whatsappNumber || source.whatsappLink || DEFAULT_SITE_SETTINGS.whatsappNumber),
+        heroTitle: String(source.heroTitle || DEFAULT_SITE_SETTINGS.heroTitle),
         heroSubtitle: String(source.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle),
         aboutText: String(source.aboutText || DEFAULT_SITE_SETTINGS.aboutText),
         instagramLink: String(source.instagramLink || DEFAULT_SITE_SETTINGS.instagramLink),

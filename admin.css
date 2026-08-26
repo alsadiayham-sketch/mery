@@ -314,6 +314,32 @@ body {
     color: #9e0f52;
 }
 
+.password-form {
+    max-width: 700px;
+}
+
+.form-intro,
+.form-help {
+    color: #7a435d;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+
+.form-help {
+    margin-top: -6px;
+}
+
+.hero-branding-form {
+    margin-bottom: 24px;
+}
+
+.section-divider {
+    border: 0;
+    border-top: 1px solid #f5e7be;
+    margin: 24px 0;
+}
+
 .product-select {
     accent-color: #d6246f;
 }

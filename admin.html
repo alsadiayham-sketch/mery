@@ -130,6 +130,17 @@
             </form>
             <hr style="margin: 24px 0; border-color: #eee;">
             <div class="tab-header"><h3>الأمان</h3></div>
+            <form class="settings-form password-form" onsubmit="changeOwnPassword(event)">
+                <p class="form-intro">غيّري كلمة مرور حسابك من هنا. سيتم تسجيل خروج جميع المستخدمين لحماية المتجر.</p>
+                <div class="form-group"><label for="currentPassword">كلمة المرور الحالية</label><input type="password" id="currentPassword" autocomplete="current-password" required></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="newPassword">كلمة المرور الجديدة</label><input type="password" id="newPassword" autocomplete="new-password" minlength="12" maxlength="200" required aria-describedby="passwordHelp"></div>
+                    <div class="form-group"><label for="confirmPassword">تأكيد كلمة المرور الجديدة</label><input type="password" id="confirmPassword" autocomplete="new-password" minlength="12" maxlength="200" required></div>
+                </div>
+                <p id="passwordHelp" class="form-help">استخدمي 12 حرفاً أو أكثر.</p>
+                <button type="submit" class="btn-save" id="changePasswordBtn">تغيير كلمة المرور</button>
+            </form>
+            <hr style="margin: 24px 0; border-color: #eee;">
             <div class="security-actions">
                 <button class="btn-danger" onclick="killAllSessions()">إنهاء جميع الجلسات</button>
                 <p style="color:#888;font-size:13px;margin-top:8px;">سيتم تسجيل خروج جميع المستخدمين المتصلين حالياً (بما فيهم أنت)</p>
@@ -138,6 +149,15 @@
 
         <div class="tab-content" id="tab-hero">
             <div class="tab-header"><h3>إدارة واجهة المتجر (Hero)</h3></div>
+            <form class="settings-form hero-branding-form" onsubmit="saveHeroBranding(event)">
+                <div class="form-group">
+                    <label for="heroBrandName">اسم المتجر على الواجهة</label>
+                    <input type="text" id="heroBrandName" lang="en" dir="ltr" maxlength="80" placeholder="Mery Glam" required>
+                </div>
+                <p class="form-help">سيظهر هذا الاسم على صور الواجهة الرئيسية.</p>
+                <button type="submit" class="btn-save">حفظ اسم الواجهة</button>
+            </form>
+            <hr class="section-divider">
             <p style="color:#888;font-size:13px;margin-bottom:14px;line-height:1.9;">غيّري صورة الواجهة برفع صورة من الملفات أو الهاتف، أو بلصق رابط HTTPS مباشر للصورة.</p>
             <form class="settings-form" onsubmit="event.preventDefault(); saveHeroSlide(event)">
                 <div class="form-row">
