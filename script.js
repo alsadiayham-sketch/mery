@@ -1023,7 +1023,7 @@ function renderHeroSlider(slides) {
         }
         return '<div class="hero-slide' + (idx === 0 ? ' active' : '') + '">' + media +
             '<div class="hero-overlay"><div class="hero-content">' +
-            '<h1 lang="en" dir="ltr">Mery Glam</h1>' +
+            '<h1 lang="en" dir="ltr">Mery Beauty Store</h1>' +
             '<p class="hero-subtitle" lang="en" dir="ltr">from beautiful girl to another</p>' +
             '<a href="#products" class="btn-primary">تسوقي الآن</a>' +
             '</div></div></div>';
