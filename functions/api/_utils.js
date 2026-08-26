@@ -71,7 +71,7 @@ export async function makeUserRecord(name, role, password) {
 }
 
 export function passwordError(password) {
-    if (typeof password !== "string" || password.length < 12) return "password must be at least 12 characters";
+    if (typeof password !== "string" || password.length < 6) return "password must be at least 6 characters";
     if (password.length > 200) return "password is too long";
     return null;
 }

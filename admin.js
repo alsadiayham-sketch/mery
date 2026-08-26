@@ -108,8 +108,8 @@ function changeOwnPassword(event) {
     var newPassword = document.getElementById('newPassword').value;
     var confirmPassword = document.getElementById('confirmPassword').value;
     var button = document.getElementById('changePasswordBtn');
-    if (newPassword.length < 12) {
-        setAdminStatus('يجب أن تتكون كلمة المرور الجديدة من 12 حرفاً على الأقل.', 'error');
+    if (newPassword.length < 6) {
+        setAdminStatus('يجب أن تتكون كلمة المرور الجديدة من 6 أحرف على الأقل.', 'error');
         return;
     }
     if (newPassword !== confirmPassword) {
@@ -128,7 +128,7 @@ function changeOwnPassword(event) {
         var message = err && err.message;
         if (message === 'current password is incorrect') message = 'كلمة المرور الحالية غير صحيحة.';
         else if (message === 'new passwords do not match') message = 'كلمتا المرور الجديدتان غير متطابقتين.';
-        else if (message === 'password must be at least 12 characters') message = 'يجب أن تتكون كلمة المرور الجديدة من 12 حرفاً على الأقل.';
+        else if (message === 'password must be at least 6 characters') message = 'يجب أن تتكون كلمة المرور الجديدة من 6 أحرف على الأقل.';
         else message = 'تعذر تغيير كلمة المرور حالياً. حاولي مرة أخرى.';
         setAdminStatus(message, 'error');
         button.disabled = false;
