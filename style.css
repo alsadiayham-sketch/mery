@@ -1448,6 +1448,28 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 .filter-group h4 { font-size: 0.9rem; color: var(--primary-dark); margin-bottom: 10px; font-weight: 700; }
 .filter-group > div { display: flex; flex-wrap: wrap; gap: 8px; }
 .product-card-controls { padding: 0 20px 12px; }
+
+.products-load-more {
+    grid-column: 1 / -1;
+    min-height: 44px;
+    border: 1px solid #e0609a;
+    border-radius: 10px;
+    background: #fff;
+    color: #9e0f52;
+    cursor: pointer;
+    font: inherit;
+    font-weight: 700;
+}
+
+.btn-share-product {
+    min-width: 40px;
+    border: 1px solid #e0609a;
+    border-radius: 8px;
+    background: #fff;
+    color: #9e0f52;
+    cursor: pointer;
+    font: inherit;
+}
 .card-size-selector, .card-size-single { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--bg-alt); border-radius: 12px; font-size: 0.85rem; color: var(--text-light); }
 .card-size-selector label, .card-size-single span { font-weight: 600; }
 .card-size-single strong { color: var(--text); font-weight: 700; }

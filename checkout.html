@@ -463,17 +463,22 @@
                 return;
             }
 
-            db.collection('orders').doc(order.id).set(order).then(function () {
-                localStorage.setItem('mery_last_order', JSON.stringify(order));
+            db.collection('orders').doc(order.id).set(order).then(function (result) {
+                var savedOrder = result && result.order ? result.order : order;
+                localStorage.setItem('mery_last_order', JSON.stringify(savedOrder));
                 localStorage.setItem('mery_cart', '[]');
                 cart = [];
                 orderJustPlaced = true;
-                var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(order));
+                var whatsappUrl = buildWhatsAppUrl(siteSettings.whatsappNumber || '972569236758', buildWhatsAppMessage(savedOrder));
                 setStatus('تم حفظ الطلب. جاري تحويلك إلى واتساب لإرسال الطلب...', 'success');
                 window.location.href = whatsappUrl;
             }).catch(function (error) {
                 console.error(error);
-                alert('تعذر حفظ الطلب حالياً، حاولي مرة أخرى.');
+                if (error && error.message === 'insufficient_stock') {
+                    alert('بعض المنتجات لم تعد متوفرة بالكمية المطلوبة. حدّثي السلة وحاولي مرة أخرى.');
+                } else {
+                    alert('تعذر حفظ الطلب حالياً، حاولي مرة أخرى.');
+                }
                 button.disabled = false;
                 button.textContent = originalText;
                 setStatus('');

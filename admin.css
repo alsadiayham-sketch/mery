@@ -343,3 +343,13 @@ body {
 .product-select {
     accent-color: #d6246f;
 }
+
+.stock-input {
+    width: 78px;
+    min-height: 36px;
+    border: 1px solid #e0609a;
+    border-radius: 8px;
+    color: #9e0f52;
+    font: inherit;
+    padding: 4px 8px;
+}

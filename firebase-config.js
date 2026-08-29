@@ -284,6 +284,7 @@
         // user management (admin only)
         listUsers: function () { return apiFetch('/users', { auth: true }).then(function (d) { return d.users || []; }); },
         saveUser: function (u) { return apiFetch('/users', { method: 'POST', auth: true, body: u }); },
+        updateProductStock: function (id, stock) { return apiFetch('/products?id=' + encodeURIComponent(id), { method: 'PATCH', auth: true, body: { stock: stock } }); },
         deleteUser: function (username) { return apiFetch('/users?username=' + encodeURIComponent(username), { method: 'DELETE', auth: true }); },
         apiFetch: apiFetch
     };

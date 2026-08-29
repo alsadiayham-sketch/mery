@@ -92,7 +92,7 @@ async function buildTrustedItems(items, env) {
         // make an otherwise valid checkout fail during a deployment update.
         const productId = cleanText(rawItem && (rawItem.id || rawItem.productId), 100);
         if (!productId) continue;
-        const row = await env.DB.prepare("SELECT data FROM products WHERE id = ?").bind(productId).first();
+        const row = await env.DB.prepare("SELECT data, stock FROM products WHERE id = ?").bind(productId).first();
         if (!row) continue;
         let product;
         try { product = JSON.parse(row.data) || {}; } catch (e) { continue; }
@@ -121,6 +121,14 @@ async function buildTrustedItems(items, env) {
     }
 
     return { items: trustedItems, pricingPending };
+}
+
+function getRequestedStock(items) {
+    const requested = new Map();
+    items.forEach(item => {
+        if (!item.pricePending) requested.set(item.id, (requested.get(item.id) || 0) + item.qty);
+    });
+    return requested;
 }
 
 // GET /api/orders -> list, any authenticated user (admin or worker).
@@ -167,7 +175,18 @@ export async function onRequestPost(context) {
     if (!Array.isArray(body.items) || !body.items.length) return bad(400, "invalid items");
 
     const trusted = await buildTrustedItems(body.items, context.env);
-    if (!trusted.items.length) return bad(400, "invalid items");
+    if (!trusted.items.length || trusted.items.length !== body.items.length) return bad(400, "invalid items");
+    const requestedStock = getRequestedStock(trusted.items);
+    const shortages = [];
+    for (const [productId, requested] of requestedStock) {
+        const row = await context.env.DB.prepare("SELECT data, stock FROM products WHERE id = ?").bind(productId).first();
+        if (!row || Number(row.stock) < requested) {
+            let product = {};
+            try { product = row ? JSON.parse(row.data) || {} : {}; } catch (e) {}
+            shortages.push({ productId, name: cleanText(product.name, 160), requested, available: row ? Math.max(0, Number(row.stock) || 0) : 0 });
+        }
+    }
+    if (shortages.length) return json({ error: "insufficient_stock", shortages }, 409);
 
     const delivery = body.delivery === "pickup" ? "pickup" : "delivery";
     const region = delivery === "pickup" ? "pickup" : cleanText(body.region, 30);
@@ -194,10 +213,21 @@ export async function onRequestPost(context) {
         pricingPending: trusted.pricingPending,
         date: new Date(now).toISOString()
     };
-    await context.env.DB
+    const statements = [];
+    requestedStock.forEach((requested, productId) => {
+        statements.push(context.env.DB.prepare("UPDATE products SET stock = stock - ?, stock_updated_at = ? WHERE id = ?").bind(requested, now, productId));
+    });
+    statements.push(context.env.DB
         .prepare("INSERT INTO orders (id, data, status, created_at) VALUES (?, ?, ?, ?)")
-        .bind(id, JSON.stringify(data), status, now)
-        .run();
+        .bind(id, JSON.stringify(data), status, now));
+    try {
+        await context.env.DB.batch(statements);
+    } catch (error) {
+        if (String(error && error.message || error).includes("CHECK constraint failed")) {
+            return json({ error: "insufficient_stock" }, 409);
+        }
+        return bad(500, "could not save order");
+    }
     return json({ id, order: { ...data, id, status, createdAt: now } });
 }
 

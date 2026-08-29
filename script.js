@@ -255,9 +255,18 @@ function getPriceHTML(pricing) {
         '<span><span class="sr-only">' + (pricing.hasDiscount ? 'السعر الآن: ' : 'السعر: ') + '</span>' + formatCurrency(pricing.final) + '</span>';
 }
 
+var visibleProductCount = 8;
+var renderedProductSignature = '';
+var productsObserver = null;
+
 function renderProducts(productsToShow) {
     var grid = document.getElementById('productsGrid');
     if (!grid) return;
+    var signature = currentFilter + ':' + productsToShow.map(function (product) { return product.id; }).join(',');
+    if (signature !== renderedProductSignature) {
+        renderedProductSignature = signature;
+        visibleProductCount = 8;
+    }
     grid.innerHTML = '';
 
     if (!productsToShow.length) {
@@ -265,7 +274,7 @@ function renderProducts(productsToShow) {
         return;
     }
 
-    productsToShow.forEach(function (product) {
+    productsToShow.slice(0, visibleProductCount).forEach(function (product) {
         var sizeData = getSizeData(product, 0);
         var pricing = getFinalPrice(product, 0, discounts);
         var statusBadge = getStatusBadge(product.status);
@@ -296,11 +305,50 @@ function renderProducts(productsToShow) {
             '<div class="product-card-controls">' + sizeSelector + '</div>',
             '<div class="product-card-actions">',
             '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '">1</span><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
-            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' ? 'disabled' : '') + '>' + (product.status === 'soldout' ? 'نفذت الكمية' : 'أضيفي') + '</button>',
+            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' || product.stock < 1 ? 'disabled' : '') + '>' + (product.status === 'soldout' || product.stock < 1 ? 'نفذت الكمية' : 'أضيفي') + '</button>',
+            '<button class="btn-share-product" type="button" onclick="shareProduct(event, \'' + product.id + '\')" aria-label="مشاركة المنتج">↗</button>',
             '</div>'
         ].join('');
         grid.appendChild(card);
     });
+    if (productsObserver) productsObserver.disconnect();
+    if (productsToShow.length > visibleProductCount) {
+        var sentinel = document.createElement('button');
+        sentinel.type = 'button';
+        sentinel.className = 'products-load-more';
+        sentinel.textContent = 'تحميل المزيد';
+        sentinel.onclick = loadMoreProducts;
+        grid.appendChild(sentinel);
+        if ('IntersectionObserver' in window) {
+            productsObserver = new IntersectionObserver(function (entries) {
+                if (entries[0].isIntersecting) loadMoreProducts();
+            }, { rootMargin: '320px' });
+            productsObserver.observe(sentinel);
+        }
+    }
+    var sharedProductId = new URLSearchParams(window.location.search).get('product');
+    if (sharedProductId && !currentPDPProduct && products.some(function (product) { return product.id === sharedProductId; })) {
+        openPDP(sharedProductId);
+    }
+}
+
+function loadMoreProducts() {
+    visibleProductCount += 8;
+    renderProducts(getFilteredProducts(currentFilter));
+}
+
+function shareProduct(event, productId) {
+    event.stopPropagation();
+    var product = products.find(function (entry) { return entry.id === productId; });
+    if (!product) return;
+    var url = window.location.origin + window.location.pathname + '?product=' + encodeURIComponent(productId);
+    if (navigator.share) {
+        navigator.share({ title: product.name, text: product.name, url: url }).catch(function () {});
+    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(function () { setStoreMessage('تم نسخ رابط المنتج.', 'success'); });
+    } else {
+        window.prompt('انسخي رابط المنتج:', url);
+    }
 }
 
 function updateProductSize(productId, sizeIdx) {
@@ -1106,6 +1154,9 @@ function openPDP(productId) {
     renderRelatedProducts(product);
     document.getElementById('pdpModal').style.display = 'flex';
     document.body.style.overflow = 'hidden';
+    var url = new URL(window.location.href);
+    url.searchParams.set('product', productId);
+    window.history.replaceState({}, '', url);
 }
 
 function renderRelatedProducts(product) {
@@ -1168,6 +1219,9 @@ function closePDP(event) {
     document.getElementById('pdpModal').style.display = 'none';
     document.body.style.overflow = '';
     currentPDPProduct = null;
+    var url = new URL(window.location.href);
+    url.searchParams.delete('product');
+    window.history.replaceState({}, '', url);
 }
 
 function changePDPQty(delta) {

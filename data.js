@@ -36,7 +36,8 @@ function normalizeProduct(product) {
         sizes: sizes.filter(function (size) { return size.size && size.price >= 0; }),
         discount: Number(product && product.discount) || 0,
         image: (product && product.image) || '',
-        status: (product && product.status) || 'normal'
+        status: (product && product.status) || 'normal',
+        stock: product && product.stock != null && product.stock !== '' ? Math.max(0, parseInt(product.stock, 10) || 0) : undefined
     };
 }
 

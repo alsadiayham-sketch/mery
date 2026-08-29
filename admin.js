@@ -329,14 +329,32 @@ function renderProductsTable() {
     var tbody = document.getElementById('productsTableBody');
     var statusLabels = { normal: 'عادي', bestseller: 'الأكثر مبيعاً', special: 'مميز', soldout: 'نفذت الكمية' };
     if (!products.length) {
-        tbody.innerHTML = '<tr><td colspan="10" class="empty-state">لا توجد منتجات حالياً.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="empty-state">لا توجد منتجات حالياً.</td></tr>';
         return;
     }
 
     tbody.innerHTML = products.map(function (product) {
-        return '<tr><td><input type="checkbox" class="product-select" value="' + product.id + '" onchange="updateBulkBar()"></td><td><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"></td><td>' + product.name + '</td><td>' + product.brand + '</td><td>' + product.category + '</td><td>' + formatSizes(product) + '</td><td>' + formatPrices(product) + '</td><td>' + (product.discount ? product.discount + '%' : '-') + '</td><td><span class="status-tag ' + (product.status || 'normal') + '">' + statusLabels[product.status || 'normal'] + '</span></td><td class="actions"><button class="btn-edit" onclick="editProduct(\'' + product.id + '\')">تعديل</button><button class="btn-delete" onclick="deleteProduct(\'' + product.id + '\')">حذف</button></td></tr>';
+        return '<tr><td><input type="checkbox" class="product-select" value="' + product.id + '" onchange="updateBulkBar()"></td><td><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"></td><td>' + product.name + '</td><td>' + product.brand + '</td><td>' + product.category + '</td><td>' + formatSizes(product) + '</td><td>' + formatPrices(product) + '</td><td><input class="stock-input" type="number" min="0" step="1" value="' + product.stock + '" aria-label="مخزون ' + product.name + '" onchange="updateProductStock(\'' + product.id + '\', this)"></td><td>' + (product.discount ? product.discount + '%' : '-') + '</td><td><span class="status-tag ' + (product.status || 'normal') + '">' + statusLabels[product.status || 'normal'] + '</span></td><td class="actions"><button class="btn-edit" onclick="editProduct(\'' + product.id + '\')">تعديل</button><button class="btn-delete" onclick="deleteProduct(\'' + product.id + '\')">حذف</button></td></tr>';
     }).join('');
     updateBulkBar();
+}
+
+function updateProductStock(productId, input) {
+    var stock = Number(input.value);
+    if (!Number.isInteger(stock) || stock < 0) {
+        input.value = products.find(function (product) { return product.id === productId; }).stock;
+        return;
+    }
+    input.disabled = true;
+    storeAuth.updateProductStock(productId, stock).then(function () {
+        var product = products.find(function (entry) { return entry.id === productId; });
+        if (product) product.stock = stock;
+        setAdminStatus('تم تحديث المخزون.', 'success');
+    }).catch(function () {
+        setAdminStatus('تعذر تحديث المخزون.', 'error');
+    }).finally(function () {
+        input.disabled = false;
+    });
 }
 
 function getSelectedProductIds() {
