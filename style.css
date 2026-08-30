@@ -1491,6 +1491,21 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
     outline: none;
 }
 
+.btn-share-product.is-copied {
+    background: #9e0f52;
+    color: #fff;
+}
+
+.btn-share-product.is-copied svg {
+    display: none;
+}
+
+.btn-share-product.is-copied::after {
+    content: "✓";
+    font-size: 1.1rem;
+    font-weight: 800;
+}
+
 .product-image {
     position: relative;
 }

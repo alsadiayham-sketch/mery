@@ -342,18 +342,53 @@ function shareProduct(event, productId) {
     var product = products.find(function (entry) { return entry.id === productId; });
     if (!product) return;
     var url = window.location.origin + window.location.pathname + '?product=' + encodeURIComponent(productId);
-    if (navigator.share) {
-        navigator.share({ title: product.name, text: product.name, url: url }).catch(function () {});
-    } else if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(function () { setStoreMessage('تم نسخ رابط المنتج.', 'success'); });
-    } else {
-        window.prompt('انسخي رابط المنتج:', url);
+    var button = event.currentTarget;
+
+    function showCopied() {
+        if (button) {
+            button.classList.add('is-copied');
+            button.setAttribute('aria-label', 'تم نسخ الرابط');
+            setTimeout(function () {
+                button.classList.remove('is-copied');
+                button.setAttribute('aria-label', 'مشاركة المنتج');
+            }, 1800);
+        }
+        setStoreMessage('تم نسخ رابط المنتج.', 'success');
     }
 
-    function shareCurrentProduct() {
-        if (!currentPDPProduct) return;
-        shareProduct({ stopPropagation: function () {} }, currentPDPProduct.id);
+    function copyLink() {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            return navigator.clipboard.writeText(url).then(showCopied).catch(legacyCopy);
+        }
+        return legacyCopy();
     }
+
+    function legacyCopy() {
+        var input = document.createElement('textarea');
+        input.value = url;
+        input.setAttribute('readonly', '');
+        input.style.position = 'fixed';
+        input.style.opacity = '0';
+        document.body.appendChild(input);
+        input.select();
+        var copied = document.execCommand('copy');
+        document.body.removeChild(input);
+        if (copied) showCopied();
+        else window.prompt('انسخي رابط المنتج:', url);
+    }
+
+    if (navigator.share && /Android|iPhone|iPad/i.test(navigator.userAgent)) {
+        navigator.share({ title: product.name, text: product.name, url: url }).catch(function (error) {
+            if (!error || error.name !== 'AbortError') copyLink();
+        });
+    } else {
+        copyLink();
+    }
+}
+
+function shareCurrentProduct() {
+    if (!currentPDPProduct) return;
+    shareProduct({ stopPropagation: function () {}, currentTarget: document.querySelector('#pdpModal .btn-share-product') }, currentPDPProduct.id);
 }
 
 function updateProductSize(productId, sizeIdx) {
