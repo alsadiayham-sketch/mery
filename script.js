@@ -295,6 +295,7 @@ function renderProducts(productsToShow) {
             statusBadge,
             '<div class="product-image" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<img src="' + product.image + '" alt="' + product.name + '" loading="lazy" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">',
+            '<button class="btn-share-product product-share-button" type="button" onclick="shareProduct(event, \'' + product.id + '\')" aria-label="مشاركة ' + product.name + '"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.5 6.8-4"></path><path d="m8.6 13.5 6.8 4"></path></svg></button>',
             '</div>',
             '<div class="product-info" onclick="openPDP(\'' + product.id + '\')" style="cursor:pointer;">',
             '<span class="product-brand">' + product.brand + '</span>',
@@ -304,9 +305,8 @@ function renderProducts(productsToShow) {
             '</div>',
             '<div class="product-card-controls">' + sizeSelector + '</div>',
             '<div class="product-card-actions">',
-            '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '">1</span><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
+            '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button type="button" aria-label="تقليل الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '" role="status" aria-live="polite">1</span><button type="button" aria-label="زيادة الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
             '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' || product.stock < 1 ? 'disabled' : '') + '>' + (product.status === 'soldout' || product.stock < 1 ? 'نفذت الكمية' : 'أضيفي') + '</button>',
-            '<button class="btn-share-product" type="button" onclick="shareProduct(event, \'' + product.id + '\')" aria-label="مشاركة المنتج"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.5 6.8-4"></path><path d="m8.6 13.5 6.8 4"></path></svg></button>',
             '</div>'
         ].join('');
         grid.appendChild(card);
