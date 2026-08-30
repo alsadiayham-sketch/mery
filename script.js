@@ -306,7 +306,7 @@ function renderProducts(productsToShow) {
             '<div class="product-card-actions">',
             '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '">1</span><button onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
             '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' || product.stock < 1 ? 'disabled' : '') + '>' + (product.status === 'soldout' || product.stock < 1 ? 'نفذت الكمية' : 'أضيفي') + '</button>',
-            '<button class="btn-share-product" type="button" onclick="shareProduct(event, \'' + product.id + '\')" aria-label="مشاركة المنتج">↗</button>',
+            '<button class="btn-share-product" type="button" onclick="shareProduct(event, \'' + product.id + '\')" aria-label="مشاركة المنتج"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.5 6.8-4"></path><path d="m8.6 13.5 6.8 4"></path></svg></button>',
             '</div>'
         ].join('');
         grid.appendChild(card);
@@ -348,6 +348,11 @@ function shareProduct(event, productId) {
         navigator.clipboard.writeText(url).then(function () { setStoreMessage('تم نسخ رابط المنتج.', 'success'); });
     } else {
         window.prompt('انسخي رابط المنتج:', url);
+    }
+
+    function shareCurrentProduct() {
+        if (!currentPDPProduct) return;
+        shareProduct({ stopPropagation: function () {} }, currentPDPProduct.id);
     }
 }
 

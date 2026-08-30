@@ -1373,20 +1373,20 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 
 @media (max-width: 520px) {
     .products-grid {
-        grid-template-columns: 1fr;
-        gap: 18px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
     }
 
     .product-image {
-        height: 260px;
+        height: 160px;
     }
 
     .product-info {
-        padding: 16px 18px;
+        padding: 10px 12px;
     }
 
     .product-info h3 {
-        font-size: 1rem;
+        font-size: 0.85rem;
     }
 
     .product-card-actions {
@@ -1462,13 +1462,43 @@ html[dir="rtl"] .pdp-image { border-radius: 0 20px 20px 0; }
 }
 
 .btn-share-product {
+    display: inline-grid;
+    place-items: center;
+    width: 40px;
     min-width: 40px;
+    min-height: 40px;
     border: 1px solid #e0609a;
     border-radius: 8px;
     background: #fff;
     color: #9e0f52;
     cursor: pointer;
     font: inherit;
+}
+
+.btn-share-product svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    stroke-width: 2;
+}
+
+.btn-share-product:hover,
+.btn-share-product:focus-visible {
+    background: #ffeaf3;
+    outline: none;
+}
+
+.pdp-actions {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+}
+
+.pdp-actions .pdp-add-btn {
+    flex: 1;
 }
 .card-size-selector, .card-size-single { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 12px; background: var(--bg-alt); border-radius: 12px; font-size: 0.85rem; color: var(--text-light); }
 .card-size-selector label, .card-size-single span { font-weight: 600; }

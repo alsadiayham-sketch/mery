@@ -179,7 +179,10 @@
                             <button onclick="changePDPQty(1)">+</button>
                         </div>
                     </div>
-                    <button class="btn-add-cart pdp-add-btn" id="pdpAddBtn" onclick="addFromPDP()">أضيفي للسلة</button>
+                    <div class="pdp-actions">
+                        <button class="btn-add-cart pdp-add-btn" id="pdpAddBtn" onclick="addFromPDP()">أضيفي للسلة</button>
+                        <button class="btn-share-product" type="button" onclick="shareCurrentProduct()" aria-label="مشاركة المنتج"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="m8.6 10.5 6.8-4"></path><path d="m8.6 13.5 6.8 4"></path></svg></button>
+                    </div>
                 </div>
             </div>
             <div class="pdp-related" id="pdpRelated" style="display:none;">
