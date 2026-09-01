@@ -305,11 +305,12 @@ function renderProducts(productsToShow) {
             '</div>',
             '<div class="product-card-controls">' + sizeSelector + '</div>',
             '<div class="product-card-actions">',
-            '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button type="button" aria-label="تقليل الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><span id="cardQty-' + product.id + '" role="status" aria-live="polite">1</span><button type="button" aria-label="زيادة الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
-            '<button class="btn-add-cart" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' || product.stock < 1 ? 'disabled' : '') + '>' + (product.status === 'soldout' || product.stock < 1 ? 'نفذت الكمية' : 'أضيفي') + '</button>',
+            '<div class="qty-selector qty-sm" id="qty-' + product.id + '"><button type="button" id="cardQtyMinus-' + product.id + '" aria-label="تقليل الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', -1)">−</button><input id="cardQty-' + product.id + '" type="number" min="1" max="' + product.stock + '" value="1" inputmode="numeric" aria-label="كمية ' + product.name + '" onclick="event.stopPropagation()" onchange="setCardQty(\'' + product.id + '\', this.value)"><button type="button" id="cardQtyPlus-' + product.id + '" aria-label="زيادة الكمية" onclick="event.stopPropagation(); changeCardQty(\'' + product.id + '\', 1)">+</button></div>',
+            '<button class="btn-add-cart" id="cardAdd-' + product.id + '" onclick="addToCart(event, \'' + product.id + '\')" ' + (product.status === 'soldout' || product.stock < 1 ? 'disabled' : '') + '>' + (product.status === 'soldout' || product.stock < 1 ? 'نفذت الكمية' : 'أضيفي') + '</button>',
             '</div>'
         ].join('');
         grid.appendChild(card);
+        updateCardQtyControl(product.id);
     });
     if (productsObserver) productsObserver.disconnect();
     if (productsToShow.length > visibleProductCount) {
@@ -863,7 +864,12 @@ function addToCart(event, productId) {
     var product = products.find(function (entry) { return entry.id === productId; });
     if (!product || product.status === 'soldout') return;
 
-    var qty = parseInt(document.getElementById('cardQty-' + productId).textContent, 10) || 1;
+    var qty = parseInt(document.getElementById('cardQty-' + productId).value, 10) || 1;
+    qty = clampQuantity(product, qty);
+    if (qty < 1) {
+        updateCardQtyControl(productId);
+        return;
+    }
     var sizeIdx = getSelectedCardSizeIndex(productId);
     var pricing = getFinalPrice(product, sizeIdx, discounts);
     var btn = event.currentTarget;
@@ -885,7 +891,8 @@ function addToCart(event, productId) {
         btn.classList.remove('added');
     }, 1500);
 
-    document.getElementById('cardQty-' + productId).textContent = '1';
+    document.getElementById('cardQty-' + productId).value = '1';
+    updateCardQtyControl(productId);
 }
 
 function flyToCart(imgElement, product) {
@@ -934,12 +941,57 @@ function flyToCart(imgElement, product) {
 }
 
 function changeCardQty(productId, delta) {
-    var span = document.getElementById('cardQty-' + productId);
-    if (!span) return;
-    var qty = (parseInt(span.textContent, 10) || 1) + delta;
-    if (qty < 1) qty = 1;
-    if (qty > 99) qty = 99;
-    span.textContent = qty;
+    var input = document.getElementById('cardQty-' + productId);
+    if (!input) return;
+    setCardQty(productId, (parseInt(input.value, 10) || 1) + delta);
+}
+
+function getCartProductQuantity(productId) {
+    return cart.reduce(function (sum, item) {
+        return sum + (item.type !== 'custom_package' && item.id === productId ? (parseInt(item.qty, 10) || 0) : 0);
+    }, 0);
+}
+
+function getAvailableProductQuantity(product) {
+    return Math.max(0, (parseInt(product.stock, 10) || 0) - getCartProductQuantity(product.id));
+}
+
+function clampQuantity(product, quantity) {
+    var available = getAvailableProductQuantity(product);
+    return available ? Math.max(1, Math.min(parseInt(quantity, 10) || 1, available)) : 0;
+}
+
+function setCardQty(productId, quantity) {
+    var product = products.find(function (entry) { return entry.id === productId; });
+    var input = document.getElementById('cardQty-' + productId);
+    if (!product || !input) return;
+    var next = clampQuantity(product, quantity);
+    if (next !== Number(quantity)) {
+        input.classList.add('qty-corrected');
+        setTimeout(function () { input.classList.remove('qty-corrected'); }, 220);
+    }
+    input.value = next || 1;
+    updateCardQtyControl(productId);
+}
+
+function updateCardQtyControl(productId) {
+    var product = products.find(function (entry) { return entry.id === productId; });
+    var input = document.getElementById('cardQty-' + productId);
+    var minus = document.getElementById('cardQtyMinus-' + productId);
+    var plus = document.getElementById('cardQtyPlus-' + productId);
+    if (!product || !input || !minus || !plus) return;
+    var available = getAvailableProductQuantity(product);
+    var value = Math.max(1, Math.min(parseInt(input.value, 10) || 1, available || 1));
+    input.value = value;
+    input.max = Math.max(1, available);
+    input.disabled = available < 1;
+    minus.disabled = available < 1 || value <= 1;
+    plus.disabled = available < 1 || value >= available;
+    var addButton = document.getElementById('cardAdd-' + productId);
+    if (addButton) {
+        addButton.disabled = product.status === 'soldout' || available < 1;
+        addButton.textContent = product.status === 'soldout' || available < 1 ? 'نفذت الكمية' : 'أضيفي';
+    }
 }
 
 function updateCartBadge() {
@@ -1029,7 +1081,8 @@ function renderCart() {
         if (!product) return '';
         var sizeData = getSizeData(product, item.sizeIdx);
         var pricing = getFinalPrice(product, item.sizeIdx, discounts);
-        return '<div class="cart-item"><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"><div class="cart-item-info"><h4>' + product.name + '</h4><span class="cart-item-brand">' + product.brand + ' • ' + getSizeLabel(sizeData) + '</span><div class="cart-item-price">' + formatCurrency(pricing.final * item.qty) + '</div></div><div class="cart-item-qty"><button onclick="updateCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button onclick="updateCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)">+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button></div>';
+        var noMoreStock = getAvailableProductQuantity(product) < 1;
+        return '<div class="cart-item"><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"><div class="cart-item-info"><h4>' + product.name + '</h4><span class="cart-item-brand">' + product.brand + ' • ' + getSizeLabel(sizeData) + '</span><div class="cart-item-price">' + formatCurrency(pricing.final * item.qty) + '</div></div><div class="cart-item-qty"><button aria-label="تقليل كمية ' + product.name + '" onclick="updateCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', -1)">−</button><span>' + item.qty + '</span><button aria-label="زيادة كمية ' + product.name + '" onclick="updateCartQty(\'' + item.id + '\', ' + item.sizeIdx + ', 1)"' + (noMoreStock ? ' disabled' : '') + '>+</button></div><button class="cart-item-remove" onclick="removeFromCart(\'' + item.id + '\', ' + item.sizeIdx + ')">✕</button></div>';
     }).join('');
 
     updateCheckoutLink(updateCartTotal());
@@ -1038,6 +1091,8 @@ function renderCart() {
 function updateCartQty(productId, sizeIdx, delta) {
     var item = cart.find(function (entry) { return entry.id === productId && entry.sizeIdx === sizeIdx; });
     if (!item || item.type === 'custom_package') return;
+    var product = products.find(function (entry) { return entry.id === productId; });
+    if (!product || (delta > 0 && getAvailableProductQuantity(product) < 1)) return;
     item.qty += delta;
     if (item.qty < 1) {
         removeFromCart(productId, sizeIdx);
@@ -1176,12 +1231,13 @@ function openPDP(productId) {
     document.getElementById('pdpImage').innerHTML = '<img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'">';
     document.getElementById('pdpBrand').textContent = product.brand;
     document.getElementById('pdpName').textContent = product.name;
-    document.getElementById('pdpQty').textContent = '1';
+    document.getElementById('pdpQty').value = '1';
     renderPDPSizeOptions();
     updatePDPDisplay();
+    updatePDPQtyControl();
 
     var addBtn = document.getElementById('pdpAddBtn');
-    if (product.status === 'soldout') {
+    if (product.status === 'soldout' || getAvailableProductQuantity(product) < 1) {
         addBtn.textContent = 'نفذت الكمية';
         addBtn.disabled = true;
         addBtn.style.background = '#9ca3af';
@@ -1265,14 +1321,43 @@ function closePDP(event) {
 }
 
 function changePDPQty(delta) {
-    pdpQty += delta;
-    if (pdpQty < 1) pdpQty = 1;
-    if (pdpQty > 99) pdpQty = 99;
-    document.getElementById('pdpQty').textContent = pdpQty;
+    setPDPQty(pdpQty + delta);
+}
+
+function setPDPQty(quantity) {
+    if (!currentPDPProduct) return;
+    var input = document.getElementById('pdpQty');
+    var next = clampQuantity(currentPDPProduct, quantity);
+    if (next !== Number(quantity)) {
+        input.classList.add('qty-corrected');
+        setTimeout(function () { input.classList.remove('qty-corrected'); }, 220);
+    }
+    pdpQty = next || 1;
+    input.value = pdpQty;
+    updatePDPQtyControl();
+}
+
+function updatePDPQtyControl() {
+    if (!currentPDPProduct) return;
+    var available = getAvailableProductQuantity(currentPDPProduct);
+    var input = document.getElementById('pdpQty');
+    var minus = document.getElementById('pdpQtyMinus');
+    var plus = document.getElementById('pdpQtyPlus');
+    if (!input || !minus || !plus) return;
+    pdpQty = Math.max(1, Math.min(pdpQty, available || 1));
+    input.value = pdpQty;
+    input.max = Math.max(1, available);
+    input.disabled = available < 1;
+    minus.disabled = available < 1 || pdpQty <= 1;
+    plus.disabled = available < 1 || pdpQty >= available;
 }
 
 function addFromPDP() {
     if (!currentPDPProduct || currentPDPProduct.status === 'soldout') return;
+    if (getAvailableProductQuantity(currentPDPProduct) < pdpQty) {
+        updatePDPQtyControl();
+        return;
+    }
 
     var pricing = getFinalPrice(currentPDPProduct, currentPDPSizeIdx, discounts);
     var existing = cart.find(function (item) { return item.id === currentPDPProduct.id && item.sizeIdx === currentPDPSizeIdx; });
@@ -1294,4 +1379,6 @@ function addFromPDP() {
         btn.classList.remove('added');
         closePDP();
     }, 1200);
+    updatePDPQtyControl();
+    updateCardQtyControl(currentPDPProduct.id);
 }

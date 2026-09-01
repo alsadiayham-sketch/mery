@@ -999,7 +999,12 @@ html[dir="rtl"] .cart-sidebar {
 }
 
 .qty-selector button:hover { background: var(--primary); color: white; }
-.qty-selector span { min-width: 30px; text-align: center; font-weight: 700; font-size: 0.95rem; }
+.qty-selector input { width: 38px; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--text); font: inherit; font-weight: 700; text-align: center; -moz-appearance: textfield; }
+.qty-selector input::-webkit-inner-spin-button, .qty-selector input::-webkit-outer-spin-button { margin: 0; -webkit-appearance: none; }
+.qty-selector button:disabled, .qty-selector input:disabled { cursor: not-allowed; opacity: 0.45; }
+.qty-selector button:disabled:hover { background: var(--primary-lighter); color: var(--primary); }
+.qty-corrected { animation: qty-correct 220ms ease-out; }
+@keyframes qty-correct { 50% { background: var(--primary-lighter); } }
 
 .qty-sm { transform: scale(0.85); transform-origin: center; }
 

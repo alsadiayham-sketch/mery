@@ -174,9 +174,9 @@
                     <div class="pdp-qty">
                         <label>الكمية:</label>
                         <div class="qty-selector">
-                            <button onclick="changePDPQty(-1)">−</button>
-                            <span id="pdpQty">1</span>
-                            <button onclick="changePDPQty(1)">+</button>
+                            <button type="button" id="pdpQtyMinus" aria-label="تقليل الكمية" onclick="changePDPQty(-1)">−</button>
+                            <input id="pdpQty" type="number" min="1" inputmode="numeric" aria-label="كمية المنتج" onchange="setPDPQty(this.value)">
+                            <button type="button" id="pdpQtyPlus" aria-label="زيادة الكمية" onclick="changePDPQty(1)">+</button>
                         </div>
                     </div>
                     <div class="pdp-actions">
