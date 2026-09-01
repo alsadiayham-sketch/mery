@@ -956,6 +956,10 @@ function getAvailableProductQuantity(product) {
     return Math.max(0, (parseInt(product.stock, 10) || 0) - getCartProductQuantity(product.id));
 }
 
+function isProductSoldOut(product) {
+    return product.status === 'soldout' || (parseInt(product.stock, 10) || 0) < 1;
+}
+
 function clampQuantity(product, quantity) {
     var available = getAvailableProductQuantity(product);
     return available ? Math.max(1, Math.min(parseInt(quantity, 10) || 1, available)) : 0;
@@ -989,8 +993,9 @@ function updateCardQtyControl(productId) {
     plus.disabled = available < 1 || value >= available;
     var addButton = document.getElementById('cardAdd-' + productId);
     if (addButton) {
-        addButton.disabled = product.status === 'soldout' || available < 1;
-        addButton.textContent = product.status === 'soldout' || available < 1 ? 'نفذت الكمية' : 'أضيفي';
+        var soldOut = isProductSoldOut(product);
+        addButton.disabled = soldOut || available < 1;
+        addButton.textContent = soldOut ? 'نفذت الكمية' : (available < 1 ? 'الكمية في السلة' : 'أضيفي');
     }
 }
 
@@ -1237,8 +1242,8 @@ function openPDP(productId) {
     updatePDPQtyControl();
 
     var addBtn = document.getElementById('pdpAddBtn');
-    if (product.status === 'soldout' || getAvailableProductQuantity(product) < 1) {
-        addBtn.textContent = 'نفذت الكمية';
+    if (isProductSoldOut(product) || getAvailableProductQuantity(product) < 1) {
+        addBtn.textContent = isProductSoldOut(product) ? 'نفذت الكمية' : 'الكمية في السلة';
         addBtn.disabled = true;
         addBtn.style.background = '#9ca3af';
     } else {
