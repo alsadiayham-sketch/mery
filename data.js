@@ -8,7 +8,15 @@ var DEFAULT_SITE_SETTINGS = {
     heroSubtitle: 'from beautiful girl to another',
     aboutText: 'في Mery Beauty Store اخترنا لكِ منتجات الجمال والعناية بلمسة مرحة وناعمة.\nتسوّقي المكياج، العناية، الباكجات والعروض بسهولة، وكل طلب مجهّز بحب من جميلة إلى جميلة.',
     instagramLink: 'https://www.instagram.com/',
-    tiktokLink: ''
+    tiktokLink: '',
+    deliveryZones: [
+        { id: 'westbank', name: 'الضفة', price: 20, description: 'لجميع المدن والبلدات' },
+        { id: 'jerusalem', name: 'القدس', price: 30, description: 'خدمة توصيل سريعة' },
+        { id: 'inside', name: 'الداخل', price: 60, description: 'تغليف وتوصيل آمن' }
+    ],
+    pickupLocations: [
+        { id: 'main', name: 'نقطة الاستلام الرئيسية', address: '' }
+    ]
 };
 
 var BRANDS_DATA = [];
@@ -82,13 +90,32 @@ function buildWhatsAppUrl(number, message) {
 
 function normalizeSettings(settings) {
     var source = settings || {};
+    var defaultZones = DEFAULT_SITE_SETTINGS.deliveryZones;
+    var defaultLocations = DEFAULT_SITE_SETTINGS.pickupLocations;
+    var zones = Array.isArray(source.deliveryZones) ? source.deliveryZones.map(function (zone, index) {
+        return {
+            id: String(zone && zone.id || 'zone_' + index),
+            name: String(zone && zone.name || '').trim(),
+            price: Math.max(0, Math.round(Number(zone && zone.price) || 0)),
+            description: String(zone && zone.description || '').trim()
+        };
+    }).filter(function (zone) { return zone.name; }) : defaultZones;
+    var locations = Array.isArray(source.pickupLocations) ? source.pickupLocations.map(function (location, index) {
+        return {
+            id: String(location && location.id || 'pickup_' + index),
+            name: String(location && location.name || '').trim(),
+            address: String(location && location.address || '').trim()
+        };
+    }).filter(function (location) { return location.name; }) : defaultLocations;
     return {
         whatsappNumber: extractWhatsappNumber(source.whatsappNumber || source.whatsappLink || DEFAULT_SITE_SETTINGS.whatsappNumber),
         heroTitle: String(source.heroTitle || DEFAULT_SITE_SETTINGS.heroTitle),
         heroSubtitle: String(source.heroSubtitle || DEFAULT_SITE_SETTINGS.heroSubtitle),
         aboutText: String(source.aboutText || DEFAULT_SITE_SETTINGS.aboutText),
         instagramLink: String(source.instagramLink || DEFAULT_SITE_SETTINGS.instagramLink),
-        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink)
+        tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink),
+        deliveryZones: zones,
+        pickupLocations: locations
     };
 }
 

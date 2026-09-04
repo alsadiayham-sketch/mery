@@ -192,6 +192,14 @@ function applySettings() {
         } else {
             tiktokLink.style.display = 'none';
         }
+
+        var deliveryGrid = document.getElementById('deliveryGrid');
+        if (deliveryGrid) {
+            deliveryGrid.innerHTML = siteSettings.deliveryZones.map(function (zone, index) {
+                var icons = ['🚗', '🏙️', '📦'];
+                return '<div class="delivery-card"><span class="delivery-icon">' + icons[index % icons.length] + '</span><h3>' + escapeHtml(zone.name) + '</h3><p>' + formatCurrency(zone.price) + (zone.description ? ' ' + escapeHtml(zone.description) : '') + '</p></div>';
+            }).join('') || '<p class="empty-products">لا تتوفر خدمة توصيل حالياً.</p>';
+        }
     }
 }
 

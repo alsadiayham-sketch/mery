@@ -22,6 +22,30 @@ function cleanPhone(value) {
     return String(value || "").replace(/[^\d+]/g, "").slice(0, 16);
 }
 
+const DEFAULT_DELIVERY_ZONES = [
+    { id: "westbank", name: "الضفة", price: 20 },
+    { id: "jerusalem", name: "القدس", price: 30 },
+    { id: "inside", name: "الداخل", price: 60 }
+];
+const DEFAULT_PICKUP_LOCATIONS = [{ id: "main", name: "نقطة الاستلام الرئيسية", address: "" }];
+
+async function loadShippingConfig(env) {
+    const row = await env.DB.prepare("SELECT data FROM settings WHERE key = ?").bind("config").first();
+    let settings = {};
+    try { settings = row ? JSON.parse(row.data) || {} : {}; } catch (e) {}
+    const zones = Array.isArray(settings.deliveryZones) ? settings.deliveryZones.map((zone, index) => ({
+        id: cleanText(zone && zone.id, 50) || "zone_" + index,
+        name: cleanText(zone && zone.name, 80),
+        price: Math.max(0, Math.round(Number(zone && zone.price) || 0))
+    })).filter(zone => zone.name) : DEFAULT_DELIVERY_ZONES;
+    const pickupLocations = Array.isArray(settings.pickupLocations) ? settings.pickupLocations.map((location, index) => ({
+        id: cleanText(location && location.id, 50) || "pickup_" + index,
+        name: cleanText(location && location.name, 100),
+        address: cleanText(location && location.address, 250)
+    })).filter(location => location.name) : DEFAULT_PICKUP_LOCATIONS;
+    return { zones, pickupLocations };
+}
+
 function normalizePhone(value) {
     return String(value || "").replace(/\D/g, "");
 }
@@ -188,12 +212,20 @@ export async function onRequestPost(context) {
     }
     if (shortages.length) return json({ error: "insufficient_stock", shortages }, 409);
 
+    const shippingConfig = await loadShippingConfig(context.env);
     const delivery = body.delivery === "pickup" ? "pickup" : "delivery";
-    const region = delivery === "pickup" ? "pickup" : cleanText(body.region, 30);
-    const deliveryCosts = { pickup: 0, westbank: 20, jerusalem: 30, inside: 50 };
-    if (!(region in deliveryCosts)) return bad(400, "invalid region");
+    const region = delivery === "pickup" ? "pickup" : cleanText(body.region, 50);
+    const deliveryZone = delivery === "delivery"
+        ? shippingConfig.zones.find(zone => zone.id === region)
+        : null;
+    const requestedPickupLocation = cleanText(body.pickupLocationId, 50);
+    const pickupLocation = delivery === "pickup"
+        ? shippingConfig.pickupLocations.find(location => location.id === requestedPickupLocation) ||
+            (shippingConfig.pickupLocations.length === 1 ? shippingConfig.pickupLocations[0] : null)
+        : null;
+    if ((delivery === "delivery" && !deliveryZone) || (delivery === "pickup" && !pickupLocation)) return bad(400, "invalid delivery option");
     const subtotal = trusted.items.reduce((sum, item) => sum + (Number(item.lineTotal) || 0), 0);
-    const deliveryCost = deliveryCosts[region];
+    const deliveryCost = delivery === "pickup" ? 0 : deliveryZone.price;
     const total = subtotal + deliveryCost;
     const now = Date.now();
     const id = newId();
@@ -205,6 +237,10 @@ export async function onRequestPost(context) {
         notes: cleanText(body.notes, 500),
         delivery,
         region,
+        regionName: deliveryZone ? deliveryZone.name : "",
+        pickupLocationId: pickupLocation ? pickupLocation.id : "",
+        pickupLocationName: pickupLocation ? pickupLocation.name : "",
+        pickupLocationAddress: pickupLocation ? pickupLocation.address : "",
         items: trusted.items,
         subtotal,
         deliveryCost,
