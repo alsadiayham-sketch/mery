@@ -13,9 +13,6 @@ var DEFAULT_SITE_SETTINGS = {
         { id: 'westbank', name: 'الضفة', price: 20, description: 'لجميع المدن والبلدات' },
         { id: 'jerusalem', name: 'القدس', price: 30, description: 'خدمة توصيل سريعة' },
         { id: 'inside', name: 'الداخل', price: 60, description: 'تغليف وتوصيل آمن' }
-    ],
-    pickupLocations: [
-        { id: 'main', name: 'نقطة الاستلام الرئيسية', address: '' }
     ]
 };
 
@@ -91,22 +88,16 @@ function buildWhatsAppUrl(number, message) {
 function normalizeSettings(settings) {
     var source = settings || {};
     var defaultZones = DEFAULT_SITE_SETTINGS.deliveryZones;
-    var defaultLocations = DEFAULT_SITE_SETTINGS.pickupLocations;
-    var zones = Array.isArray(source.deliveryZones) ? source.deliveryZones.map(function (zone, index) {
+    var savedZones = Array.isArray(source.deliveryZones) ? source.deliveryZones : [];
+    var zones = defaultZones.map(function (defaultZone) {
+        var savedZone = savedZones.find(function (zone) { return zone && String(zone.id) === defaultZone.id; }) || {};
         return {
-            id: String(zone && zone.id || 'zone_' + index),
-            name: String(zone && zone.name || '').trim(),
-            price: Math.max(0, Math.round(Number(zone && zone.price) || 0)),
-            description: String(zone && zone.description || '').trim()
+            id: defaultZone.id,
+            name: defaultZone.name,
+            price: Math.max(0, Math.round(Number(savedZone.price != null ? savedZone.price : defaultZone.price) || 0)),
+            description: String(savedZone.description != null ? savedZone.description : defaultZone.description).trim()
         };
-    }).filter(function (zone) { return zone.name; }) : defaultZones;
-    var locations = Array.isArray(source.pickupLocations) ? source.pickupLocations.map(function (location, index) {
-        return {
-            id: String(location && location.id || 'pickup_' + index),
-            name: String(location && location.name || '').trim(),
-            address: String(location && location.address || '').trim()
-        };
-    }).filter(function (location) { return location.name; }) : defaultLocations;
+    });
     return {
         whatsappNumber: extractWhatsappNumber(source.whatsappNumber || source.whatsappLink || DEFAULT_SITE_SETTINGS.whatsappNumber),
         heroTitle: String(source.heroTitle || DEFAULT_SITE_SETTINGS.heroTitle),
@@ -114,8 +105,7 @@ function normalizeSettings(settings) {
         aboutText: String(source.aboutText || DEFAULT_SITE_SETTINGS.aboutText),
         instagramLink: String(source.instagramLink || DEFAULT_SITE_SETTINGS.instagramLink),
         tiktokLink: String(source.tiktokLink || DEFAULT_SITE_SETTINGS.tiktokLink),
-        deliveryZones: zones,
-        pickupLocations: locations
+        deliveryZones: zones
     };
 }
 
@@ -194,7 +184,7 @@ function normalizeCustomPackageItem(item) {
         ? item.sets.map(function (entry) { return normalizeCustomPackageSet(entry); }).filter(function (entry) { return entry.qty > 0; })
         : [];
     if (!sets.length) sets = [normalizeCustomPackageSet({})];
-    var delivery = item && item.delivery === 'pickup' ? 'pickup' : 'delivery';
+    var delivery = 'delivery';
     return {
         type: 'custom_package',
         id: String(item && item.id ? item.id : 'pkg_' + Date.now()),

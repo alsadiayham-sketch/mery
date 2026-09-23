@@ -5,7 +5,6 @@ var discounts = [];
 var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
 var currentFilter = 'all';
 var cart = normalizeCartItems(JSON.parse(localStorage.getItem('mery_cart') || '[]'), normalizeProducts(DEFAULT_PRODUCTS));
-var deliveryMethod = localStorage.getItem('mery_delivery_method') || 'delivery';
 var currentPDPProduct = null;
 var currentPDPSizeIdx = 0;
 var pdpQty = 1;
@@ -25,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
 initializeOrderTracking();
     updateCartBadge();
     updateCheckoutLink(cart.length ? updateCartTotal() : 0);
-    setDeliveryMethod(deliveryMethod);
     setLoadingState(true);
     subscribeToStoreData();
     // Fallback if the store API takes too long.
@@ -1149,15 +1147,6 @@ function updateCheckoutLink(total) {
 
 function saveCart() {
     localStorage.setItem('mery_cart', JSON.stringify(normalizeCartItems(cart, products.length ? products : normalizeProducts(DEFAULT_PRODUCTS))));
-}
-
-function setDeliveryMethod(method) {
-    deliveryMethod = method;
-    localStorage.setItem('mery_delivery_method', method);
-    var pickupBtn = document.getElementById('optPickup');
-    var deliveryBtn = document.getElementById('optDelivery');
-    if (pickupBtn) pickupBtn.classList.toggle('active', method === 'pickup');
-    if (deliveryBtn) deliveryBtn.classList.toggle('active', method === 'delivery');
 }
 
 // ===== Hero Slider =====

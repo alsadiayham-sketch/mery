@@ -650,44 +650,14 @@ function loadSettingsForm() {
 
 function renderDeliverySettings() {
     var zonesContainer = document.getElementById('deliveryZonesSettings');
-    var locationsContainer = document.getElementById('pickupLocationsSettings');
     if (zonesContainer) {
         zonesContainer.innerHTML = siteSettings.deliveryZones.map(function (zone) {
             return '<div class="settings-list-row" data-zone-id="' + escapeHtml(zone.id) + '">' +
-                '<div class="form-group"><label>المنطقة</label><input class="delivery-zone-name" type="text" value="' + escapeHtml(zone.name) + '" required></div>' +
+                '<div class="form-group"><label>المنطقة</label><input class="delivery-zone-name" type="text" value="' + escapeHtml(zone.name) + '" readonly></div>' +
                 '<div class="form-group"><label>السعر ₪</label><input class="delivery-zone-price" type="number" min="0" step="1" value="' + zone.price + '" required></div>' +
-                '<div class="form-group"><label>وصف اختياري</label><input class="delivery-zone-description" type="text" value="' + escapeHtml(zone.description) + '"></div>' +
-                '<button type="button" class="btn-delete" onclick="this.closest(\'.settings-list-row\').remove()">حذف</button></div>';
+                '<div class="form-group"><label>وصف اختياري</label><input class="delivery-zone-description" type="text" value="' + escapeHtml(zone.description) + '"></div></div>';
         }).join('') || '<p class="form-help">لا توجد مناطق توصيل. أضيفي منطقة لتفعيل التوصيل.</p>';
     }
-    if (locationsContainer) {
-        locationsContainer.innerHTML = siteSettings.pickupLocations.map(function (location) {
-            return '<div class="settings-list-row pickup-row" data-location-id="' + escapeHtml(location.id) + '">' +
-                '<div class="form-group"><label>اسم نقطة الاستلام</label><input class="pickup-location-name" type="text" value="' + escapeHtml(location.name) + '" required></div>' +
-                '<div class="form-group"><label>العنوان أو الملاحظة</label><input class="pickup-location-address" type="text" value="' + escapeHtml(location.address) + '"></div>' +
-                '<button type="button" class="btn-delete" onclick="this.closest(\'.settings-list-row\').remove()">حذف</button></div>';
-        }).join('') || '<p class="form-help">لا توجد نقاط استلام. أضيفي نقطة لتفعيل الاستلام الذاتي.</p>';
-    }
-}
-
-function addDeliveryZone() {
-    var current = readDeliverySettings();
-    siteSettings.deliveryZones = current.deliveryZones;
-    siteSettings.pickupLocations = current.pickupLocations;
-    siteSettings.deliveryZones.push({ id: 'zone_' + Date.now(), name: '', price: 0, description: '' });
-    renderDeliverySettings();
-    var input = document.querySelector('#deliveryZonesSettings .delivery-zone-name:last-of-type');
-    if (input) input.focus();
-}
-
-function addPickupLocation() {
-    var current = readDeliverySettings();
-    siteSettings.deliveryZones = current.deliveryZones;
-    siteSettings.pickupLocations = current.pickupLocations;
-    siteSettings.pickupLocations.push({ id: 'pickup_' + Date.now(), name: '', address: '' });
-    renderDeliverySettings();
-    var input = document.querySelector('#pickupLocationsSettings .pickup-location-name:last-of-type');
-    if (input) input.focus();
 }
 
 function readDeliverySettings() {
@@ -699,14 +669,7 @@ function readDeliverySettings() {
             description: row.querySelector('.delivery-zone-description').value.trim()
         };
     }).filter(function (zone) { return zone.name && Number.isFinite(zone.price) && zone.price >= 0; });
-    var locations = Array.from(document.querySelectorAll('#pickupLocationsSettings .settings-list-row')).map(function (row) {
-        return {
-            id: row.dataset.locationId,
-            name: row.querySelector('.pickup-location-name').value.trim(),
-            address: row.querySelector('.pickup-location-address').value.trim()
-        };
-    }).filter(function (location) { return location.name; });
-    return { deliveryZones: zones, pickupLocations: locations };
+    return { deliveryZones: zones };
 }
 
 async function saveSettingsForm(event) {
@@ -719,8 +682,7 @@ async function saveSettingsForm(event) {
         aboutText: document.getElementById('settingAbout').value,
         instagramLink: document.getElementById('settingInstagram').value,
         tiktokLink: document.getElementById('settingTiktok').value,
-        deliveryZones: deliverySettings.deliveryZones,
-        pickupLocations: deliverySettings.pickupLocations
+        deliveryZones: deliverySettings.deliveryZones
     });
     setAdminLoading(true);
     await db.collection('settings').doc('config').set(siteSettings, { merge: true });

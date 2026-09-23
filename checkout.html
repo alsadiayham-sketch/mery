@@ -101,9 +101,7 @@
         var discounts = normalizeDiscounts(DEFAULT_DISCOUNTS);
         var siteSettings = normalizeSettings(DEFAULT_SITE_SETTINGS);
         var cart = normalizeCartItems(JSON.parse(localStorage.getItem('mery_cart') || '[]'), products);
-        var selectedDelivery = localStorage.getItem('mery_delivery_method') || 'delivery';
         var selectedRegion = '';
-        var selectedPickupLocation = '';
         var orderJustPlaced = false;
 
         document.addEventListener('DOMContentLoaded', initializeCheckout);
@@ -163,7 +161,7 @@
         function renderCustomCheckoutItem(item) {
             var details = getCustomPackageSetsHtml(item.sets);
             var meta = '<span class="checkout-item-meta-block">لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '</span>';
-            meta += '<span class="checkout-item-meta-block">طريقة الاستلام: ' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + '</span>';
+            meta += '<span class="checkout-item-meta-block">طريقة الاستلام: توصيل</span>';
             meta += '<span class="checkout-item-meta-block">الاسم: ' + escapeHtml(item.customerName) + ' • الهاتف: ' + escapeHtml(item.customerPhone) + '</span>';
             if (item.delivery === 'delivery' && item.customerLocation) meta += '<span class="checkout-item-meta-block">الموقع: ' + escapeHtml(item.customerLocation) + '</span>';
             if (item.notes) meta += '<span class="checkout-item-note">ملاحظات: ' + escapeHtml(item.notes) + '</span>';
@@ -197,7 +195,6 @@
             var formData = getFormValues();
             var html = '';
             var deliveryZones = getDeliveryZones();
-            var pickupLocations = getPickupLocations();
             html += '<div class="checkout-grid">';
             html += '<div>';
             html += '<div class="checkout-card">';
@@ -205,32 +202,20 @@
             html += itemsHTML;
             html += '</div>';
             html += '<div class="checkout-card" style="margin-top:20px;">';
-            html += '<h3>طريقة الاستلام</h3>';
-            html += '<div class="delivery-options" role="radiogroup" aria-label="طريقة الاستلام">';
-            if (pickupLocations.length) html += '<button type="button" role="radio" aria-checked="' + (selectedDelivery === 'pickup') + '" class="delivery-option ' + (selectedDelivery === 'pickup' ? 'selected' : '') + '" onclick="selectDelivery(\'pickup\')"><span class="radio-dot" aria-hidden="true"></span><span class="delivery-option-info"><strong>استلام ذاتي (مجاني)</strong><span>استلمي طلبك بنفسك بدون تكلفة إضافية</span></span></button>';
-            if (deliveryZones.length) html += '<button type="button" role="radio" aria-checked="' + (selectedDelivery === 'delivery') + '" class="delivery-option ' + (selectedDelivery === 'delivery' ? 'selected' : '') + '" onclick="selectDelivery(\'delivery\')"><span class="radio-dot" aria-hidden="true"></span><span class="delivery-option-info"><strong>توصيل للعنوان</strong><span>اختاري منطقة التوصيل المناسبة</span></span></button>';
-            html += '</div>';
-            if (selectedDelivery === 'pickup' && pickupLocations.length) {
-                html += '<div class="form-group" style="margin-top:15px;"><label for="pickupLocation">نقطة الاستلام</label><select id="pickupLocation" onchange="selectPickupLocation(this.value)">' +
-                    (pickupLocations.length > 1 ? '<option value="">اختاري نقطة الاستلام</option>' : '') +
-                    pickupLocations.map(function (location) { return '<option value="' + escapeHtml(location.id) + '"' + (location.id === selectedPickupLocation ? ' selected' : '') + '>' + escapeHtml(location.name + (location.address ? ' — ' + location.address : '')) + '</option>'; }).join('') +
-                    '</select></div>';
-            }
-            if (selectedDelivery === 'delivery') {
-                html += '<div class="delivery-regions" style="margin-top:15px;">';
-                html += '<h4 style="margin-bottom:10px; font-size:0.95rem;">اختاري المنطقة:</h4>';
-                html += '<div class="region-options" role="radiogroup" aria-label="منطقة التوصيل">';
-                html += deliveryZones.map(function (zone) {
-                    return '<button type="button" role="radio" aria-checked="' + (selectedRegion === zone.id) + '" class="region-option ' + (selectedRegion === zone.id ? 'selected' : '') + '" onclick="selectRegion(\'' + escapeHtml(zone.id) + '\')"><span>' + escapeHtml(zone.name) + '</span><span class="region-cost">' + formatCurrency(zone.price) + '</span></button>';
-                }).join('');
-                html += '</div></div>';
-            }
+            html += '<h3>التوصيل للعنوان</h3>';
+            html += '<div class="delivery-regions">';
+            html += '<h4 style="margin-bottom:10px; font-size:0.95rem;">اختاري المنطقة:</h4>';
+            html += '<div class="region-options" role="radiogroup" aria-label="منطقة التوصيل">';
+            html += deliveryZones.map(function (zone) {
+                return '<button type="button" role="radio" aria-checked="' + (selectedRegion === zone.id) + '" class="region-option ' + (selectedRegion === zone.id ? 'selected' : '') + '" onclick="selectRegion(\'' + escapeHtml(zone.id) + '\')"><span>' + escapeHtml(zone.name) + '</span><span class="region-cost">' + formatCurrency(zone.price) + '</span></button>';
+            }).join('');
+            html += '</div></div>';
             html += '</div>';
             html += '<div class="checkout-card" style="margin-top:20px;">';
             html += '<h3>معلومات التواصل</h3>';
             html += '<div class="form-group"><label for="custName">الاسم</label><input type="text" id="custName" name="name" autocomplete="name" placeholder="اسمك الكريم" required></div>';
             html += '<div class="form-group"><label for="custPhone">رقم الهاتف</label><input type="tel" id="custPhone" name="tel" autocomplete="tel" placeholder="05xxxxxxxx" pattern="[0-9]*" inputmode="numeric" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')"></div>';
-            html += '<div class="form-group" id="addressGroup" style="' + (selectedDelivery === 'pickup' ? 'display:none' : '') + '"><label for="custAddress">العنوان (المدينة + تفاصيل)</label><textarea id="custAddress" name="street-address" autocomplete="street-address" rows="2" placeholder="المدينة، الحي، الشارع..."></textarea></div>';
+            html += '<div class="form-group" id="addressGroup"><label for="custAddress">العنوان (المدينة + تفاصيل)</label><textarea id="custAddress" name="street-address" autocomplete="street-address" rows="2" placeholder="المدينة، الحي، الشارع..."></textarea></div>';
             html += '<div class="form-group"><label for="custNotes">ملاحظات إضافية (اختياري)</label><textarea id="custNotes" name="notes" rows="2" placeholder="أي ملاحظات على الطلب..."></textarea></div>';
             html += '</div>';
             html += '</div>';
@@ -276,15 +261,6 @@
             localStorage.setItem('mery_cart', JSON.stringify(normalizeCartItems(cart, products)));
         }
 
-        function selectDelivery(method) {
-            var formData = getFormValues();
-            selectedDelivery = method;
-            if (method === 'pickup') selectedRegion = '';
-            localStorage.setItem('mery_delivery_method', method);
-            render();
-            restoreFormValues(formData);
-        }
-
         function selectRegion(region) {
             var formData = getFormValues();
             selectedRegion = region;
@@ -292,24 +268,10 @@
             restoreFormValues(formData);
         }
 
-        function selectPickupLocation(locationId) {
-            var formData = getFormValues();
-            selectedPickupLocation = locationId;
-            render();
-            restoreFormValues(formData);
-        }
-
         function getDeliveryZones() { return siteSettings.deliveryZones || []; }
-        function getPickupLocations() { return siteSettings.pickupLocations || []; }
         function getSelectedDeliveryZone() { return getDeliveryZones().find(function (zone) { return zone.id === selectedRegion; }) || null; }
-        function getSelectedPickupLocation() { return getPickupLocations().find(function (location) { return location.id === selectedPickupLocation; }) || null; }
         function ensureDeliverySelections() {
             if (!getDeliveryZones().some(function (zone) { return zone.id === selectedRegion; })) selectedRegion = '';
-            if (!getPickupLocations().some(function (location) { return location.id === selectedPickupLocation; })) {
-                selectedPickupLocation = getPickupLocations().length === 1 ? getPickupLocations()[0].id : '';
-            }
-            if (selectedDelivery === 'delivery' && !getDeliveryZones().length && getPickupLocations().length) selectedDelivery = 'pickup';
-            if (selectedDelivery === 'pickup' && !getPickupLocations().length && getDeliveryZones().length) selectedDelivery = 'delivery';
         }
 
         function getFormValues() {
@@ -334,11 +296,10 @@
 
         function getDeliveryCost() {
             var zone = getSelectedDeliveryZone();
-            return selectedDelivery === 'pickup' ? 0 : (zone ? zone.price : 0);
+            return zone ? zone.price : 0;
         }
 
         function getDeliveryCostLabel() {
-            if (selectedDelivery === 'pickup') return 'مجاني (استلام ذاتي)';
             if (!selectedRegion) return 'اختاري المنطقة';
             var zone = getSelectedDeliveryZone();
             return zone ? formatCurrency(getDeliveryCost()) + ' (' + zone.name + ')' : 'اختاري المنطقة';
@@ -410,9 +371,8 @@
                 customerPhone: customerPhone,
                 address: address,
                 notes: notes,
-                delivery: selectedDelivery,
-                region: selectedDelivery === 'delivery' ? selectedRegion : 'pickup',
-                pickupLocationId: selectedDelivery === 'pickup' ? selectedPickupLocation : '',
+                delivery: 'delivery',
+                region: selectedRegion,
                 deliveryCost: deliveryCost,
                 subtotal: subtotal,
                 total: total,
@@ -431,12 +391,12 @@
                     }).join('\n');
                     var locationLine = item.delivery === 'delivery' && item.customerLocation ? '\n   الموقع: ' + item.customerLocation : '';
                     var noteLine = item.notes ? '\n   ملاحظات: ' + item.notes : '';
-                    return (index + 1) + '. ' + item.name + '\n   لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '\n' + packageLines + '\n   الاستلام: ' + (item.delivery === 'pickup' ? 'استلام من المصنع' : 'توصيل') + '\n   الاسم: ' + item.customerName + ' • الهاتف: ' + item.customerPhone + locationLine + noteLine + '\n   السعر: يحدد لاحقاً';
+                    return (index + 1) + '. ' + item.name + '\n   لون التغليف: ' + getWrapperColorLabel(item.wrapperColor) + '\n' + packageLines + '\n   التوصيل: توصيل\n   الاسم: ' + item.customerName + ' • الهاتف: ' + item.customerPhone + locationLine + noteLine + '\n   السعر: يحدد لاحقاً';
                 }
                 return (index + 1) + '. ' + item.name + ' (' + item.sizeLabel + ')\n   السعر: ' + item.price + ' شيكل × ' + item.qty + ' = ' + item.lineTotal + ' شيكل';
             }).join('\n');
-            var shippingText = order.delivery === 'pickup' ? 'مجاني (استلام ذاتي)' : formatCurrency(order.deliveryCost) + ' (' + (order.regionName || (getSelectedDeliveryZone() || {}).name || '-') + ')';
-            var deliveryLabel = order.delivery === 'pickup' ? 'استلام ذاتي' + (order.pickupLocationName ? ' — ' + order.pickupLocationName : '') : 'توصيل إلى ' + (order.regionName || (getSelectedDeliveryZone() || {}).name || '-') + ': ' + order.address;
+            var shippingText = formatCurrency(order.deliveryCost) + ' (' + (order.regionName || (getSelectedDeliveryZone() || {}).name || '-') + ')';
+            var deliveryLabel = 'توصيل إلى ' + (order.regionName || (getSelectedDeliveryZone() || {}).name || '-') + ': ' + order.address;
             var msg = 'مرحبا، طلب جديد (' + order.id + '):\n';
             msg += 'ـــــــــــــــــــــــــــ\n';
             msg += 'الاسم: ' + order.customerName + '\n';
@@ -474,12 +434,9 @@
             var customerPhone = document.getElementById('custPhone').value.trim();
             if (!customerName || !customerPhone) return alert('الرجاء إدخال الاسم ورقم الهاتف');
             if (customerPhone.length < 9 || customerPhone.length > 14) return alert('رقم الهاتف غير صحيح');
-            if (selectedDelivery === 'delivery') {
-                if (!selectedRegion) return alert('الرجاء اختيار المنطقة');
-                var address = document.getElementById('custAddress').value.trim();
-                if (!address) return alert('الرجاء إدخال عنوان التوصيل');
-            }
-            if (selectedDelivery === 'pickup' && !getSelectedPickupLocation()) return alert('الرجاء اختيار نقطة الاستلام');
+            if (!selectedRegion) return alert('الرجاء اختيار المنطقة');
+            var address = document.getElementById('custAddress').value.trim();
+            if (!address) return alert('الرجاء إدخال عنوان التوصيل');
 
             var button = document.getElementById('confirmOrderBtn');
             var originalText = button.textContent;
