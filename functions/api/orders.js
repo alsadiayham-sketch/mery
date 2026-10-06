@@ -133,6 +133,7 @@ async function buildTrustedItems(items, env) {
             name: cleanText(product.name, 160),
             brand: cleanText(product.brand, 100),
             category: cleanText(product.category, 100),
+            image: cleanText(product.image, 2000),
             sizeIdx,
             sizeLabel: getSizeLabel(sizeData),
             qty,

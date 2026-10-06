@@ -99,7 +99,10 @@ html, body { font-family: 'Tajawal', sans-serif; background: #fafaf8; color: #1a
 .order-details-row td { background: #f8f4ea; }
 .order-details { display: grid; gap: 14px; }
 .order-items-list { display: grid; gap: 10px; }
-.order-item-card { background: white; border-radius: 12px; padding: 12px; border: 1px solid #fdf8e8; }
+.order-item-card { display: flex; align-items: center; gap: 14px; background: white; border-radius: 12px; padding: 12px; border: 1px solid #fdf8e8; }
+.order-item-media { flex: 0 0 72px; }
+.order-item-image { width: 72px; height: 72px; object-fit: contain; border-radius: 10px; background: #fafaf8; }
+.order-item-content { min-width: 0; }
 .order-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .order-meta div { background: white; border-radius: 12px; padding: 12px; }
 .order-status-select { padding: 8px 10px; border-radius: 10px; border: 1px solid #d1d5db; font-family: 'Tajawal', sans-serif; }

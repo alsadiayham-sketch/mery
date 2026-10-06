@@ -334,7 +334,7 @@ function renderProductsTable() {
     }
 
     tbody.innerHTML = products.map(function (product) {
-        return '<tr><td><input type="checkbox" class="product-select" value="' + product.id + '" onchange="updateBulkBar()"></td><td><img src="' + product.image + '" alt="' + product.name + '" onerror="this.src=\'' + FALLBACK_IMAGE + '\'"></td><td>' + product.name + '</td><td>' + product.brand + '</td><td>' + product.category + '</td><td>' + formatSizes(product) + '</td><td>' + formatPrices(product) + '</td><td><input class="stock-input" type="number" min="0" step="1" value="' + product.stock + '" aria-label="مخزون ' + product.name + '" onchange="updateProductStock(\'' + product.id + '\', this)"></td><td>' + (product.discount ? product.discount + '%' : '-') + '</td><td><span class="status-tag ' + (product.status || 'normal') + '">' + statusLabels[product.status || 'normal'] + '</span></td><td class="actions"><button class="btn-edit" onclick="editProduct(\'' + product.id + '\')">تعديل</button><button class="btn-delete" onclick="deleteProduct(\'' + product.id + '\')">حذف</button></td></tr>';
+        return '<tr><td><input type="checkbox" class="product-select" value="' + product.id + '" onchange="updateBulkBar()"></td><td>' + renderAdminImage(product.image, product.name) + '</td><td>' + escapeHtml(product.name) + '</td><td>' + escapeHtml(product.brand) + '</td><td>' + escapeHtml(product.category) + '</td><td>' + escapeHtml(formatSizes(product)) + '</td><td>' + escapeHtml(formatPrices(product)) + '</td><td><input class="stock-input" type="number" min="0" step="1" value="' + product.stock + '" aria-label="مخزون ' + escapeHtml(product.name) + '" onchange="updateProductStock(\'' + product.id + '\', this)"></td><td>' + (product.discount ? product.discount + '%' : '-') + '</td><td><span class="status-tag ' + (product.status || 'normal') + '">' + statusLabels[product.status || 'normal'] + '</span></td><td class="actions"><button class="btn-edit" onclick="editProduct(\'' + product.id + '\')">تعديل</button><button class="btn-delete" onclick="deleteProduct(\'' + product.id + '\')">حذف</button></td></tr>';
     }).join('');
     updateBulkBar();
 }
@@ -743,9 +743,27 @@ function renderOrdersTable() {
     });
 }
 
+function renderAdminImage(image, alt, className) {
+    var safeImage = String(image || '').trim() || FALLBACK_IMAGE;
+    var classAttribute = className ? ' class="' + escapeHtml(className) + '"' : '';
+    return '<img' + classAttribute + ' src="' + escapeHtml(safeImage) + '" alt="' + escapeHtml(alt || '') + '" loading="lazy" onerror="this.onerror=null;this.src=\'' + FALLBACK_IMAGE + '\'">';
+}
+
+function getOrderItemImage(item) {
+    if (item && item.image) return item.image;
+    var productId = item && (item.id || item.productId);
+    var product = products.find(function (entry) {
+        if (!entry || !productId || String(entry.id) !== String(productId)) return false;
+        if (item.name && entry.name && String(item.name).trim() !== String(entry.name).trim()) return false;
+        if (item.brand && entry.brand && String(item.brand).trim() !== String(entry.brand).trim()) return false;
+        return true;
+    });
+    return product ? product.image : '';
+}
+
 function renderOrderDetails(order) {
     var itemsHtml = (order.items || []).map(function (item) {
-        return '<div class="order-item-card"><strong>' + escapeHtml(item.name || '') + '</strong><div>' + escapeHtml(item.brand || '') + ' • ' + escapeHtml(item.sizeLabel || '') + '</div><div>الكمية: ' + (parseInt(item.qty, 10) || 0) + ' • السعر: ' + escapeHtml(formatCurrency(item.price)) + ' • الإجمالي: ' + escapeHtml(formatCurrency(item.lineTotal)) + '</div></div>';
+        return '<div class="order-item-card"><div class="order-item-media">' + renderAdminImage(getOrderItemImage(item), item.name, 'order-item-image') + '</div><div class="order-item-content"><strong>' + escapeHtml(item.name || '') + '</strong><div>' + escapeHtml(item.brand || '') + ' • ' + escapeHtml(item.sizeLabel || '') + '</div><div>الكمية: ' + (parseInt(item.qty, 10) || 0) + ' • السعر: ' + escapeHtml(formatCurrency(item.price)) + ' • الإجمالي: ' + escapeHtml(formatCurrency(item.lineTotal)) + '</div></div></div>';
     }).join('');
 
     var destination = order.delivery === 'pickup' ? (order.pickupLocationName || 'استلام ذاتي') : (order.regionName || DELIVERY_REGION_LABEL(order.region));
