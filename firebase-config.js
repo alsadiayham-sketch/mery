@@ -166,13 +166,12 @@
         });
     };
 
-    // Polls get() on an interval (emulates Firestore doc onSnapshot). Used for
-    // settings/config on the storefront, checkout and admin.
+    // Fetch once per page load. The old Firestore compatibility layer polled
+    // every 8 seconds, which turned every open storefront tab into a D1 reader.
     DocRef.prototype.onSnapshot = function (onNext, onError) {
         var self = this;
         var stopped = false;
-        var INTERVAL = 8000;
-        function poll() {
+        function fetchOnce() {
             if (stopped) return;
             self.get().then(function (snap) {
                 if (!stopped && typeof onNext === 'function') onNext(snap);
@@ -180,9 +179,8 @@
                 if (!stopped && typeof onError === 'function') onError(err);
             });
         }
-        poll();
-        var timer = setInterval(poll, INTERVAL);
-        return function () { stopped = true; clearInterval(timer); };
+        fetchOnce();
+        return function () { stopped = true; };
     };
 
     // ---- Collection / Query ----
@@ -214,8 +212,7 @@
     Collection.prototype.onSnapshot = function (onNext, onError) {
         var self = this;
         var stopped = false;
-        var INTERVAL = 8000;
-        function poll() {
+        function fetchOnce() {
             if (stopped) return;
             self.get().then(function (snap) {
                 if (!stopped && typeof onNext === 'function') onNext(snap);
@@ -223,9 +220,8 @@
                 if (!stopped && typeof onError === 'function') onError(err);
             });
         }
-        poll();
-        var timer = setInterval(poll, INTERVAL);
-        return function () { stopped = true; clearInterval(timer); };
+        fetchOnce();
+        return function () { stopped = true; };
     };
 
     // settings is accessed as db.collection('settings').doc('config')

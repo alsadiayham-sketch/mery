@@ -13,7 +13,9 @@ export async function onRequestGet(context) {
     const { results } = await context.env.DB
         .prepare("SELECT id, data FROM hero ORDER BY ord ASC")
         .all();
-    return json({ hero: (results || []).map(rowToHero) });
+    return json({ hero: (results || []).map(rowToHero) }, 200, {
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120"
+    });
 }
 
 // POST /api/hero -> admin (upsert a slide; body may include ord)

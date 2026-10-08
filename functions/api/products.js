@@ -15,7 +15,9 @@ export async function onRequestGet(context) {
     const { results } = await context.env.DB
         .prepare("SELECT id, data, stock FROM products ORDER BY updated_at DESC")
         .all();
-    return json({ products: (results || []).map(rowToProduct) });
+    return json({ products: (results || []).map(rowToProduct) }, 200, {
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120"
+    });
 }
 
 // POST /api/products  -> admin. Upsert one product (body = product object).

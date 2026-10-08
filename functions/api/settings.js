@@ -10,7 +10,9 @@ export async function onRequestGet(context) {
         .first();
     let data = {};
     if (row) { try { data = JSON.parse(row.data) || {}; } catch (e) { data = {}; } }
-    return json({ settings: data });
+    return json({ settings: data }, 200, {
+        "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=120"
+    });
 }
 
 // POST /api/settings -> admin (replace settings object)

@@ -84,20 +84,8 @@ function subscribeToStoreData() {
     });
     unsubscribers = [];
 
-    // Load first 6 products fast, then load the rest
-    db.collection('products').orderBy('id').limit(6).get().then(function (snapshot) {
-        if (!snapshot.empty) {
-            products = snapshot.docs.map(function (docSnap) {
-                var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d);
-            });
-            syncCartWithProducts();
-            markStoreLoaded('products');
-        }
-    }).catch(function () {
-        // Initial fetch failed, rely on onSnapshot below
-    });
-
-    // Subscribe to all products for real-time updates (always runs)
+    // Load the current storefront state once. A full fetch avoids the old
+    // duplicate "first 6, then all" request sequence.
     unsubscribers.push(db.collection('products').onSnapshot(function (fullSnapshot) {
         products = fullSnapshot.docs.map(function (docSnap) {
             var d = docSnap.data(); d.id = docSnap.id; return normalizeProduct(d);
